@@ -39,3 +39,7 @@ export const createBatch = (profileId, chapterId) =>
     method: 'POST',
     body: JSON.stringify({ profile_id: profileId, chapter_id: chapterId }),
   });
+
+// Gamification
+export const getLeaderboard = () => request('/api/leaderboard');
+export const getBadges = (profileId) => request(`/api/badges/${profileId}`);

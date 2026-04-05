@@ -154,6 +154,24 @@ function Dashboard() {
           <p style={{ fontSize: '0.85rem' }}>Ask Raj to create one for you.</p>
         </div>
       )}
+
+      {/* Gamification links */}
+      <div style={{ display: 'flex', gap: 12, marginTop: 16 }}>
+        <button
+          data-testid="badges-btn"
+          onClick={() => navigate(`/badges/${pid}`)}
+          style={{ ...btnStyle, flex: 1, background: '#1e1e2e', border: '1px solid #333', fontSize: '0.9rem' }}
+        >
+          🏅 Badges
+        </button>
+        <button
+          data-testid="leaderboard-btn"
+          onClick={() => navigate('/leaderboard')}
+          style={{ ...btnStyle, flex: 1, background: '#1e1e2e', border: '1px solid #333', fontSize: '0.9rem' }}
+        >
+          🏆 Leaderboard
+        </button>
+      </div>
     </div>
   );
 }

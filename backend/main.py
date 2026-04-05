@@ -14,8 +14,9 @@ from datetime import datetime
 import database
 from database import get_db
 from seed import seed_all
-from models import Chapter, Puzzle, Profile, Session as TrainingSession
+from models import Chapter, Puzzle, Profile, Session as TrainingSession, BadgeDefinition, EarnedBadge
 import training
+import gamification
 
 app = FastAPI(title="Chess Intuition Trainer")
 
@@ -195,7 +196,34 @@ def record_attempt(req: AttemptRequest, db: Session = Depends(get_db)):
         user_move=req.user_move,
         db=db,
     )
-    return {"attempt_id": attempt.id, "success": bool(attempt.success)}
+
+    # Calculate XP and update profile
+    profile = db.query(Profile).get(req.profile_id)
+    streak = profile.current_streak or 0 if profile else 0
+    xp = gamification.calculate_xp(
+        time_ms=req.time_taken_ms,
+        success=req.success,
+        circle=req.circle,
+        streak=streak,
+    )
+    if profile:
+        profile.total_xp = (profile.total_xp or 0) + xp
+        # Also update session xp_earned
+        session = training._get_active_session(req.profile_id, db)
+        if session:
+            session.xp_earned = (session.xp_earned or 0) + xp
+        db.commit()
+
+    # Check for newly earned badges
+    new_badges = gamification.check_and_award_badges(profile_id=req.profile_id, db=db)
+    new_badge_keys = [b.key for b in new_badges]
+
+    return {
+        "attempt_id": attempt.id,
+        "success": bool(attempt.success),
+        "xp_earned": xp,
+        "new_badges": new_badge_keys,
+    }
 
 
 @app.post("/api/training/start-session/{profile_id}")
@@ -289,3 +317,50 @@ def get_dashboard(profile_id: int, db: Session = Depends(get_db)):
             "duration_seconds": today_duration,
         },
     }
+
+
+# ---------------------------------------------------------------------------
+# Gamification endpoints
+# ---------------------------------------------------------------------------
+
+@app.get("/api/leaderboard")
+def get_leaderboard(db: Session = Depends(get_db)):
+    return gamification.get_leaderboard(db=db)
+
+
+@app.get("/api/badges/{profile_id}")
+def get_badges(profile_id: int, db: Session = Depends(get_db)):
+    """Return all badge definitions with earned status for a profile."""
+    all_defs = db.query(BadgeDefinition).order_by(BadgeDefinition.id).all()
+    earned_ids = {
+        eb.badge_id
+        for eb in db.query(EarnedBadge).filter(EarnedBadge.profile_id == profile_id).all()
+    }
+    return [
+        {
+            "id": b.id,
+            "key": b.key,
+            "name": b.name,
+            "description": b.description,
+            "category": b.category,
+            "icon": b.icon,
+            "earned": b.id in earned_ids,
+        }
+        for b in all_defs
+    ]
+
+
+@app.get("/api/profiles")
+def list_profiles(db: Session = Depends(get_db)):
+    profiles = db.query(Profile).order_by(Profile.id).all()
+    return [
+        {
+            "id": p.id,
+            "name": p.name,
+            "role": p.role,
+            "uscf_rating": p.uscf_rating,
+            "total_xp": p.total_xp or 0,
+            "current_streak": p.current_streak or 0,
+        }
+        for p in profiles
+    ]

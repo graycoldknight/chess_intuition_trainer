@@ -4,6 +4,8 @@ import ProfileSelect from './components/ProfileSelect';
 import Dashboard from './components/Dashboard';
 import TrainingSession from './components/TrainingSession';
 import ResultsScreen from './components/ResultsScreen';
+import BadgesPage from './components/BadgesPage';
+import LeaderboardPage from './components/LeaderboardPage';
 
 function App() {
   return (
@@ -13,6 +15,8 @@ function App() {
         <Route path="/dashboard/:profileId" element={<Dashboard />} />
         <Route path="/train/:profileId" element={<TrainingSession />} />
         <Route path="/results/:profileId" element={<ResultsScreen />} />
+        <Route path="/badges/:profileId" element={<BadgesPage />} />
+        <Route path="/leaderboard" element={<LeaderboardPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </div>
