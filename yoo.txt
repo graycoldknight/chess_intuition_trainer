@@ -1,0 +1,25 @@
+reference:://www.reddit.com/r/chess/comments/p2bu66/im_christopher_yoo_early_tactics_training_plan/  
+core Philosophy: Velocity and Pattern Recognition
+Christopher Yoo's father, Young-Kyu Yoo, detailed that his son's early chess education heavily prioritized tactical pattern recognition over other aspects of the game. The overarching goal of his regimen was to embed tactical motifs so deeply into long-term memory that recognizing them became a rapid, intuitive process rather than a slow, analytical calculation.
+
+The Modified Spaced Repetition Protocol
+Yoo's training was essentially a highly optimized adaptation of the Woodpecker Method and Michael de la Maza's "Rapid Chess Improvement" protocol. Rather than following the standard, grueling regimen, it was tailored to maximize cognitive focus and prevent burnout:
+
+Micro-Cycles over Massive Sets: Standard protocols often recommend solving massive sets of 1,000 puzzles over 7 repetitions. Yoo's regimen utilized much smaller "micro-cycles" of 50 to 100 puzzles.
+
+Fewer Repetitions: Instead of 7 complete circles, Yoo completed 4 to 5 circles per batch of puzzles, which proved sufficient for embedding the patterns.
+
+Strict Time Limits: To avoid the rapidly diminishing returns associated with mental fatigue, his daily puzzle-solving sessions were strictly capped at 30 to 60 minutes.
+
+Material Progression and Speed Metrics
+The difficulty of the material and the speed at which it was solved were tightly controlled:
+
+Foundational Motifs First: Yoo began his training with Susan Polgar’s Chess Tactics for Champions. He repeated circles through this book until he reached a point where he could solve every puzzle almost instantaneously.
+
+Graduating to Complexity: Only after achieving instantaneous recognition of the basic themes did he move on to the highly complex, chaotic positions found in the CT-ART training software.
+
+The 10-to-15 Second Rule: While doing mini-circles in CT-ART, the strict metric for success was repeating the 50-100 puzzle batches until his average solving time dropped to under 10 or 15 seconds per puzzle.
+
+Results
+This disciplined approach to forcing intuitive pattern recognition was highly effective; utilizing this method, Yoo experienced a rating jump from roughly 1751 FIDE to 2100 FIDE in approximately one year.
+

@@ -1,0 +1,39 @@
+# Dependencies
+node_modules/
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Build
+frontend/dist/
+*.egg-info/
+
+# Database
+*.db
+
+# Environment
+.env
+.env.local
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+*:Zone.Identifier
+Thumbs.db
+
+# Stockfish binaries (large)
+backend/bin/
+
+# PDF (large, not tracked)
+*.pdf
+
+# Playwright
+e2e/test-results/
+e2e/playwright-report/
+
+# Claude
+.claude/
