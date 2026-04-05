@@ -16,6 +16,7 @@ function TrainingSession() {
   const pid = parseInt(profileId, 10);
 
   const [puzzle, setPuzzle] = useState(null);
+  const [puzzleLoading, setPuzzleLoading] = useState(true); // true until first fetch completes
   const [game, setGame] = useState(new Chess());
   const [state, setState] = useState(null); // training state
   const [session, setSession] = useState(null);
@@ -46,6 +47,8 @@ function TrainingSession() {
         }
 
         loadNextPuzzle();
+      } else {
+        setPuzzleLoading(false);
       }
     })();
   }, [pid]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -54,8 +57,11 @@ function TrainingSession() {
     advancing.current = false;
     setSolveStatus(null);
     setArrows([]);
+    setPuzzleLoading(true);
 
     const resp = await api.getNextPuzzle(pid);
+    setPuzzleLoading(false);
+
     if (!resp.puzzle) {
       setPuzzle(null);
       setStopwatchActive(false);
@@ -137,7 +143,7 @@ function TrainingSession() {
     solveTimeRef.current = ms;
   }, []);
 
-  if (!state) {
+  if (!state || puzzleLoading) {
     return <div style={{ textAlign: 'center', marginTop: 80 }}>Loading...</div>;
   }
 
@@ -153,7 +159,7 @@ function TrainingSession() {
     );
   }
 
-  if (!puzzle) {
+  if (!puzzleLoading && !puzzle) {
     // Circle complete — navigate to results screen
     navigate(`/results/${pid}`, { replace: true });
     return null;
