@@ -262,12 +262,44 @@ def create_batch(req: CreateBatchRequest, db: Session = Depends(get_db)):
     }
 
 
+@app.get("/api/graduations/pending")
+def get_pending_graduations(db: Session = Depends(get_db)):
+    from models import Batch, Profile, Chapter
+    batches = (
+        db.query(Batch)
+        .filter(Batch.status == "ready_to_graduate")
+        .order_by(Batch.id)
+        .all()
+    )
+    result = []
+    for b in batches:
+        profile = db.query(Profile).get(b.profile_id)
+        chapter = db.query(Chapter).get(b.chapter_id)
+        result.append({
+            "batch_id": b.id,
+            "profile_id": b.profile_id,
+            "profile_name": profile.name if profile else None,
+            "chapter_id": b.chapter_id,
+            "chapter_title": chapter.title if chapter else None,
+            "current_circle": b.current_circle,
+            "status": b.status,
+        })
+    return result
+
+
 @app.post("/api/training/approve-graduation/{batch_id}")
 def approve_graduation(batch_id: int, db: Session = Depends(get_db)):
+    from models import Batch, Chapter
     batch = training.approve_graduation(batch_id=batch_id, db=db)
     if not batch:
         raise HTTPException(status_code=404, detail="Batch not found")
-    return {"batch_id": batch.id, "status": batch.status}
+    # Suggest next chapter (chapter_id + 1 if it exists)
+    next_chapter = db.query(Chapter).filter(Chapter.id == batch.chapter_id + 1).first()
+    return {
+        "batch_id": batch.id,
+        "status": batch.status,
+        "next_chapter_id": next_chapter.id if next_chapter else None,
+    }
 
 
 # ---------------------------------------------------------------------------

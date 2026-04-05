@@ -6,6 +6,7 @@ import TrainingSession from './components/TrainingSession';
 import ResultsScreen from './components/ResultsScreen';
 import BadgesPage from './components/BadgesPage';
 import LeaderboardPage from './components/LeaderboardPage';
+import ParentPanel from './components/ParentPanel';
 
 function App() {
   return (
@@ -17,6 +18,7 @@ function App() {
         <Route path="/results/:profileId" element={<ResultsScreen />} />
         <Route path="/badges/:profileId" element={<BadgesPage />} />
         <Route path="/leaderboard" element={<LeaderboardPage />} />
+        <Route path="/parent" element={<ParentPanel />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </div>

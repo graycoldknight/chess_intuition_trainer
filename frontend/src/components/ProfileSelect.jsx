@@ -19,7 +19,7 @@ function ProfileSelect() {
           <button
             key={p.id}
             data-testid={`profile-${p.name.toLowerCase()}`}
-            onClick={() => navigate(`/dashboard/${p.id}`)}
+            onClick={() => p.role === 'parent' ? navigate('/parent') : navigate(`/dashboard/${p.id}`)}
             style={{
               background: '#2a2a2a',
               border: '2px solid #444',

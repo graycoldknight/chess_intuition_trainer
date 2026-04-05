@@ -43,3 +43,11 @@ export const createBatch = (profileId, chapterId) =>
 // Gamification
 export const getLeaderboard = () => request('/api/leaderboard');
 export const getBadges = (profileId) => request(`/api/badges/${profileId}`);
+
+// Parent panel
+export const getChapters = () => request('/api/chapters');
+export const getPendingGraduations = () => request('/api/graduations/pending');
+export const approveGraduation = (batchId) =>
+  request(`/api/training/approve-graduation/${batchId}`, { method: 'POST' });
+export const getUnverifiedPuzzles = (chapterId) =>
+  request(`/api/puzzles/unverified/${chapterId}`);
