@@ -4,7 +4,10 @@ import { Chessboard } from 'react-chessboard';
 import { Chess } from 'chess.js';
 import Stopwatch from './Stopwatch';
 import SessionTimer from './SessionTimer';
+import ConfettiOverlay from './ConfettiOverlay';
+import XpPopup from './XpPopup';
 import * as api from '../services/api';
+import { saveSessionToStorage, loadSessionFromStorage, clearSessionFromStorage } from '../services/sessionStorage';
 
 const PROFILE_NAMES = { 1: 'Rishi', 2: 'Raghav', 3: 'Raj' };
 const AUTO_ADVANCE_CORRECT_MS = 1000;
@@ -26,6 +29,8 @@ function TrainingSession() {
   const [solveStatus, setSolveStatus] = useState(null); // 'correct' | 'wrong' | null
   const [arrows, setArrows] = useState([]);
   const [stopwatchActive, setStopwatchActive] = useState(false);
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [xpEarned, setXpEarned] = useState(null);
   const solveTimeRef = useRef(0);
   const advancing = useRef(false);
 
@@ -94,7 +99,7 @@ function TrainingSession() {
           setGame(new Chess(g.fen()));
         } catch (_) {}
 
-        // Record
+        // Record attempt and show XP popup
         api.recordAttempt({
           profile_id: pid,
           puzzle_id: puzzle.id,
@@ -103,6 +108,19 @@ function TrainingSession() {
           success: true,
           time_taken_ms: solveTimeRef.current,
           user_move: userUci,
+        }).then((res) => {
+          if (res?.xp_earned) {
+            setXpEarned(res.xp_earned);
+            setShowConfetti(true);
+            setTimeout(() => { setShowConfetti(false); setXpEarned(null); }, 2000);
+          }
+          // Save progress to localStorage for session resume
+          saveSessionToStorage({
+            profileId: pid,
+            batchId,
+            circle: state?.current_circle ?? 1,
+            puzzleIndex: puzzle.puzzle_number,
+          });
         }).catch(console.error);
 
         // Auto-advance
@@ -180,6 +198,12 @@ function TrainingSession() {
         transition: 'background 0.3s',
       }}
     >
+      {/* Animations */}
+      <div data-testid="confetti-overlay">
+        <ConfettiOverlay active={showConfetti} />
+      </div>
+      <XpPopup xp={xpEarned} />
+
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
         <button onClick={() => navigate('/')} style={{ background: 'none', border: 'none', color: '#888', cursor: 'pointer', fontSize: '0.85rem' }}>
