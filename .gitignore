@@ -28,9 +28,6 @@ Thumbs.db
 # Stockfish binaries (large)
 backend/bin/
 
-# PDF (large, not tracked)
-*.pdf
-
 # Playwright
 e2e/test-results/
 e2e/playwright-report/
