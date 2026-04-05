@@ -10,10 +10,11 @@ from fastapi import FastAPI, Depends, HTTPException, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
+from datetime import datetime
 import database
 from database import get_db
 from seed import seed_all
-from models import Chapter, Puzzle, Profile
+from models import Chapter, Puzzle, Profile, Session as TrainingSession
 import training
 
 app = FastAPI(title="Chess Intuition Trainer")
@@ -239,3 +240,52 @@ def approve_graduation(batch_id: int, db: Session = Depends(get_db)):
     if not batch:
         raise HTTPException(status_code=404, detail="Batch not found")
     return {"batch_id": batch.id, "status": batch.status}
+
+
+# ---------------------------------------------------------------------------
+# Dashboard endpoint
+# ---------------------------------------------------------------------------
+
+@app.get("/api/dashboard/{profile_id}")
+def get_dashboard(profile_id: int, db: Session = Depends(get_db)):
+    profile = db.query(Profile).get(profile_id)
+    if not profile:
+        raise HTTPException(status_code=404, detail="Profile not found")
+
+    # Training state (includes circle_stats + session_time_remaining_seconds)
+    training_state = training.get_training_state(profile_id=profile_id, db=db)
+
+    # Today's aggregated stats across all sessions today
+    today_str = datetime.utcnow().strftime("%Y-%m-%d")
+    today_sessions = (
+        db.query(TrainingSession)
+        .filter(
+            TrainingSession.profile_id == profile_id,
+            TrainingSession.started_at >= datetime.strptime(today_str, "%Y-%m-%d"),
+        )
+        .all()
+    )
+    today_attempted = sum(s.puzzles_attempted for s in today_sessions)
+    today_correct = sum(s.puzzles_correct for s in today_sessions)
+    today_duration = sum(
+        s.duration_seconds or 0
+        for s in today_sessions
+        if s.ended_at is not None
+    )
+
+    return {
+        "profile": {
+            "id": profile.id,
+            "name": profile.name,
+            "total_xp": profile.total_xp or 0,
+            "current_streak": profile.current_streak or 0,
+            "longest_streak": profile.longest_streak or 0,
+            "last_session_date": profile.last_session_date,
+        },
+        "training": training_state,
+        "today": {
+            "puzzles_attempted": today_attempted,
+            "puzzles_correct": today_correct,
+            "duration_seconds": today_duration,
+        },
+    }

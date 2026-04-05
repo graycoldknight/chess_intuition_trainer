@@ -58,6 +58,7 @@ function renderSession(profileId = '1') {
     <MemoryRouter initialEntries={[`/train/${profileId}`]}>
       <Routes>
         <Route path="/train/:profileId" element={<TrainingSession />} />
+        <Route path="/results/:profileId" element={<div data-testid="results-page">Results</div>} />
         <Route path="/" element={<div data-testid="home">Home</div>} />
       </Routes>
     </MemoryRouter>
@@ -196,15 +197,16 @@ describe('TrainingSession', () => {
     expect(api.getNextPuzzle).toHaveBeenCalledWith(1);
   });
 
-  it('shows session complete screen when puzzle is null', async () => {
+  it('navigates to results screen when puzzle is null (circle complete)', async () => {
     api.getNextPuzzle.mockResolvedValue({ puzzle: null });
 
     await act(async () => {
       renderSession();
     });
 
+    // TrainingSession navigates to /results/:profileId when puzzle is null
     await waitFor(() => {
-      expect(screen.getByText('Session Complete!')).toBeDefined();
+      expect(screen.getByTestId('results-page')).toBeDefined();
     });
   });
 });

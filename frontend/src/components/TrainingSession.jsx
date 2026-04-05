@@ -154,19 +154,9 @@ function TrainingSession() {
   }
 
   if (!puzzle) {
-    return (
-      <div style={{ textAlign: 'center', marginTop: 80 }}>
-        <h2>Session Complete!</h2>
-        <p style={{ color: '#888' }}>
-          {state.status === 'ready_to_graduate'
-            ? 'You are ready to graduate this chapter!'
-            : 'Circle complete. Come back tomorrow!'}
-        </p>
-        <button onClick={() => navigate('/')} style={btnStyle}>
-          Home
-        </button>
-      </div>
-    );
+    // Circle complete — navigate to results screen
+    navigate(`/results/${pid}`, { replace: true });
+    return null;
   }
 
   const boardOrientation = puzzle.turn === 'w' ? 'white' : 'black';

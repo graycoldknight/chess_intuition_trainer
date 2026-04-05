@@ -15,6 +15,9 @@ async function request(path, options = {}) {
 // Profiles
 export const getProfiles = () => request('/api/profiles');
 
+// Dashboard
+export const getDashboard = (profileId) => request(`/api/dashboard/${profileId}`);
+
 // Training
 export const getTrainingState = (profileId) =>
   request(`/api/training/state/${profileId}`);
