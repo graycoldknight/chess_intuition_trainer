@@ -54,6 +54,7 @@ class Puzzle(Base):
     pdf_page = Column(Integer)
     verified = Column(Integer, default=0)  # 0=unverified, 1=parent-approved
     extraction_confidence = Column(Float, default=0.0)
+    error_message = Column(Text)
 
     chapter = relationship("Chapter", back_populates="puzzles")
 

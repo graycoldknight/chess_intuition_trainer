@@ -111,3 +111,14 @@ def _seed_badges(db: DBSession):
         existing = db.query(BadgeDefinition).filter_by(key=b["key"]).first()
         if not existing:
             db.add(BadgeDefinition(**b))
+
+
+if __name__ == "__main__":
+    from database import SessionLocal, init_db
+    init_db()
+    db = SessionLocal()
+    try:
+        seed_all(db)
+        print("Database seeded successfully.")
+    finally:
+        db.close()

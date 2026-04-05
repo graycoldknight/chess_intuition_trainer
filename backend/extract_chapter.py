@@ -16,11 +16,13 @@ init_db()
 from extraction import extract_chapter
 
 chapter_id = int(sys.argv[1]) if len(sys.argv) > 1 else 1
+max_pages = int(sys.argv[2]) if len(sys.argv) > 2 else None
+clear_existing = "--clear" in sys.argv
 
-print(f"Extracting chapter {chapter_id}...")
+print(f"Extracting chapter {chapter_id} (limit {max_pages if max_pages else 'none'} pages, clear={clear_existing})...")
 db = SessionLocal()
 try:
-    result = extract_chapter(chapter_id, db)
+    result = extract_chapter(chapter_id, db, max_pages=max_pages, clear_existing=clear_existing)
     print(result)
 finally:
     db.close()
