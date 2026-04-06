@@ -51,3 +51,20 @@ export const approveGraduation = (batchId) =>
   request(`/api/training/approve-graduation/${batchId}`, { method: 'POST' });
 export const getUnverifiedPuzzles = (chapterId) =>
   request(`/api/puzzles/unverified/${chapterId}`);
+
+// Puzzle browsing (test profile 99)
+export const getPuzzleById = (puzzleId) =>
+  request(`/api/puzzles/${puzzleId}`);
+
+// Puzzle editing (test profile 99)
+export const updatePuzzleFen = (puzzleId, fen, turn) =>
+  request(`/api/puzzles/${puzzleId}/fen`, {
+    method: 'PUT',
+    body: JSON.stringify({ fen, turn }),
+  });
+
+export const updatePuzzleSolution = (puzzleId, { solution_san, solution_uci, solution_line, solution_uci_line }) =>
+  request(`/api/puzzles/${puzzleId}/solution`, {
+    method: 'PUT',
+    body: JSON.stringify({ solution_san, solution_uci, solution_line, solution_uci_line }),
+  });

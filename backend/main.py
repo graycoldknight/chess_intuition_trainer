@@ -286,6 +286,7 @@ def record_attempt(req: AttemptRequest, db: Session = Depends(get_db)):
         "attempt_id": attempt.id,
         "success": bool(attempt.success),
         "xp_earned": xp,
+        "total_xp": profile.total_xp or 0 if profile else 0,
         "new_badges": new_badge_keys,
     }
 
@@ -444,6 +445,68 @@ def get_badges(profile_id: int, db: Session = Depends(get_db)):
         }
         for b in all_defs
     ]
+
+
+class UpdatePuzzleFenRequest(BaseModel):
+    fen: str
+    turn: str  # "w" or "b"
+
+
+@app.get("/api/puzzles/{puzzle_id}")
+def get_puzzle_by_id(puzzle_id: int, db: Session = Depends(get_db)):
+    puzzle = db.query(Puzzle).get(puzzle_id)
+    if not puzzle:
+        raise HTTPException(status_code=404, detail="Puzzle not found")
+    return {
+        "puzzle": {
+            "id": puzzle.id,
+            "chapter_id": puzzle.chapter_id,
+            "puzzle_number": puzzle.puzzle_number,
+            "fen": puzzle.fen,
+            "turn": puzzle.turn,
+            "solution_san": puzzle.solution_san,
+            "solution_uci": puzzle.solution_uci,
+            "solution_line": puzzle.solution_line,
+            "solution_uci_line": puzzle.solution_uci_line or [puzzle.solution_uci],
+        }
+    }
+
+
+class UpdatePuzzleSolutionRequest(BaseModel):
+    solution_san: str
+    solution_uci: str
+    solution_line: str | None = None
+    solution_uci_line: list[str] | None = None
+
+
+@app.put("/api/puzzles/{puzzle_id}/solution")
+def update_puzzle_solution(puzzle_id: int, req: UpdatePuzzleSolutionRequest, db: Session = Depends(get_db)):
+    puzzle = db.query(Puzzle).get(puzzle_id)
+    if not puzzle:
+        raise HTTPException(status_code=404, detail="Puzzle not found")
+    puzzle.solution_san = req.solution_san
+    puzzle.solution_uci = req.solution_uci
+    puzzle.solution_line = req.solution_line
+    puzzle.solution_uci_line = req.solution_uci_line
+    db.commit()
+    return {
+        "id": puzzle.id,
+        "solution_san": puzzle.solution_san,
+        "solution_uci": puzzle.solution_uci,
+        "solution_line": puzzle.solution_line,
+        "solution_uci_line": puzzle.solution_uci_line,
+    }
+
+
+@app.put("/api/puzzles/{puzzle_id}/fen")
+def update_puzzle_fen(puzzle_id: int, req: UpdatePuzzleFenRequest, db: Session = Depends(get_db)):
+    puzzle = db.query(Puzzle).get(puzzle_id)
+    if not puzzle:
+        raise HTTPException(status_code=404, detail="Puzzle not found")
+    puzzle.fen = req.fen
+    puzzle.turn = req.turn
+    db.commit()
+    return {"id": puzzle.id, "fen": puzzle.fen, "turn": puzzle.turn}
 
 
 @app.get("/api/profiles")
