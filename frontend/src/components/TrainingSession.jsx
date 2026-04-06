@@ -457,6 +457,9 @@ function TrainingSession() {
       <div style={{ textAlign: 'center', marginBottom: 8, color: '#aaa', fontSize: '0.85rem', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 10 }}>
         <span>Circle {state.current_circle} &nbsp;|&nbsp; Puzzle {puzzle.puzzle_number}
         &nbsp;|&nbsp; {puzzle.turn === 'w' ? 'White' : 'Black'} to move</span>
+        {state?.is_randomized_circle && (
+          <span style={{ background: '#b45309', color: '#fef3c7', borderRadius: 6, padding: '2px 8px', fontSize: '0.78rem', fontWeight: 700 }}>⚡ Challenge Mode</span>
+        )}
         {pid === 99 && !editMode && (
           <>
             <button onClick={handlePrev} disabled={browseIndex <= 0} style={editBtnStyle}>← Prev</button>

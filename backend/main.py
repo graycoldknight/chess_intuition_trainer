@@ -35,6 +35,8 @@ def startup():
     db = database.SessionLocal()
     try:
         seed_all(db)
+        from import_chapter1 import import_chapter1
+        import_chapter1(db)
         # Phase 9: add solution_uci_line column if missing
         from sqlalchemy import text, inspect
         insp = inspect(database.engine)

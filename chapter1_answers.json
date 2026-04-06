@@ -1,5 +1,12 @@
 [
   {
+    "puzzle_number": 1,
+    "solution_san": "Rf6+",
+    "solution_uci": "f3f6",
+    "solution_uci_line": ["f3f6", "h6g7", "f6b6"],
+    "solution_line": "1. Rf6+ (intermediate move) Kg7 2. Rb6 forks both Black bishops."
+  },
+  {
     "puzzle_number": 2,
     "solution_san": "d5",
     "solution_uci": "d4d5",
