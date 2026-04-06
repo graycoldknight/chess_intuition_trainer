@@ -149,8 +149,7 @@ function Dashboard() {
           )}
         </>
       ) : (
-        <div data-testid="no-batch" style={{ textAlign: 'center', marginTop: 32, color: '#888' }}>
-          <p>No active batch yet.</p>
+        <div data-testid="no-batch" style={{ textAlign: 'center', marginTop: 32 }}>
           <button
             onClick={() => api.createBatch(pid, 1).then(() => window.location.reload())}
             style={{ marginTop: 8, padding: '10px 28px', background: '#7c3aed', color: '#fff', border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontSize: '1rem' }}
