@@ -346,3 +346,85 @@ def extract_chapter(chapter_id: int, db_session, max_pages: Optional[int] = None
             chapter.extraction_status = "pending"
             db_session.commit()
         raise
+
+
+# ---------------------------------------------------------------------------
+# Multi-move solution parsing (Phase 9)
+# ---------------------------------------------------------------------------
+
+SOLUTION_MOVE_EXTRACTION_PROMPT = """Extract ONLY the MAIN LINE chess moves from this solution text, in order.
+Return a JSON array of SAN (Standard Algebraic Notation) moves, alternating between the two sides.
+Include ALL moves played by BOTH sides in the MAIN LINE ONLY.
+Do NOT include move numbers, commentary, or annotations.
+
+IMPORTANT: Many solutions mention SIDE VARIATIONS or ALTERNATIVE LINES (e.g. "after 1... Qd4+",
+"the immediate 1. Qg3 is not so successful because of 1... Rb6", "On the other hand 1. Qe4+ is not sufficient").
+IGNORE these — extract ONLY the primary recommended sequence of moves.
+
+Examples:
+- Input: "1. Rf6+ (intermediate move) Kg7 2. Rb6 forks both Black bishops."
+  Output: ["Rf6+", "Kg7", "Rb6"]
+- Input: "The right answer is: 1. Qxc7+ Kxc7 2. Nd5+."
+  Output: ["Qxc7+", "Kxc7", "Nd5+"]
+- Input: "1. f8=Q+! Kxf8 and now 2. Bxd6+."
+  Output: ["f8=Q+", "Kxf8", "Bxd6+"]
+- Input: "1... e5 is the best reply."
+  Output: ["e5"]
+- Input: "Here White needs to find a pretty queen sacrifice: 1. Qxe7! Rxe7 2. Nf6+. It is also important to see that after 1.... Qd4+ White saves the queen, by blocking the check with 2. Qe3."
+  Output: ["Qxe7", "Rxe7", "Nf6+"]
+- Input: "White wins a rook with 1. Qxf6! gxf6 2. Nf7+. The immediate 1. Qg3 is not so successful because of 1... Rb6."
+  Output: ["Qxf6", "gxf6", "Nf7+"]
+
+Solution text: {solution_text}
+
+Return ONLY the JSON array, nothing else."""
+
+
+def parse_solution_to_uci(fen: str, solution_text: str, client=None) -> list[str] | None:
+    """
+    Parse prose solution text into a validated list of UCI move strings.
+
+    1. Use Gemini to extract the SAN move sequence from the prose.
+    2. Validate each move with python-chess against the FEN.
+    3. Return list of UCI strings, or None on failure.
+    """
+    if not solution_text or not fen:
+        return None
+
+    # Step 1: Extract SAN moves via LLM
+    try:
+        if client is None:
+            client = get_gemini_client()
+
+        from google.genai import types
+        prompt = SOLUTION_MOVE_EXTRACTION_PROMPT.format(solution_text=solution_text)
+        response = client.models.generate_content(
+            model=GEMINI_MODEL,
+            contents=[
+                types.Content(parts=[
+                    types.Part.from_text(text=prompt),
+                ])
+            ],
+        )
+        san_moves = parse_json_from_text(response.text, list)
+    except Exception as e:
+        logger.error(f"LLM extraction failed: {e}")
+        return None
+
+    if not san_moves:
+        return None
+
+    # Step 2: Validate each move with python-chess
+    try:
+        board = chess.Board(fen)
+        uci_moves = []
+        for san in san_moves:
+            # Clean annotation characters that python-chess handles but just in case
+            clean_san = san.strip().rstrip("!?")
+            move = board.parse_san(clean_san)
+            uci_moves.append(move.uci())
+            board.push(move)
+        return uci_moves
+    except Exception as e:
+        logger.error(f"Move validation failed: {e}")
+        return None

@@ -51,6 +51,7 @@ class Puzzle(Base):
     solution_san = Column(String, nullable=False)
     solution_uci = Column(String, nullable=False)
     solution_line = Column(Text)
+    solution_uci_line = Column(JSON, nullable=True)  # e.g. ["f3f6","h6g7","f6b6"]
     pdf_page = Column(Integer)
     verified = Column(Integer, default=0)  # 0=unverified, 1=parent-approved
     extraction_confidence = Column(Float, default=0.0)

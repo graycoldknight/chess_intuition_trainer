@@ -34,6 +34,10 @@ function TrainingSession() {
   const solveTimeRef = useRef(0);
   const advancing = useRef(false);
 
+  // Multi-move state
+  const [solutionMoves, setSolutionMoves] = useState([]); // ['f3f6', 'h6g7', 'f6b6']
+  const [moveIndex, setMoveIndex] = useState(0);
+
   // Load state + start session on mount
   useEffect(() => {
     (async () => {
@@ -77,66 +81,78 @@ function TrainingSession() {
     setPuzzle(p);
     const g = new Chess(p.fen);
     setGame(g);
+    // Resolve solution moves: use solution_uci_line if available, else fall back to [solution_uci]
+    setSolutionMoves(p.solution_uci_line ?? [p.solution_uci]);
+    setMoveIndex(0);
     setStopwatchActive(true);
   }, [pid]);
 
   const handlePieceDrop = useCallback(
-    (sourceSquare, targetSquare) => {
+    (sourceSquare, targetSquare, piece) => {
       if (!puzzle || solveStatus || advancing.current) return false;
 
       const userUci = sourceSquare + targetSquare;
+      // Include promotion suffix if piece is a pawn reaching back rank
+      const promotionSuffix = piece && piece[1] === 'P' && (targetSquare[1] === '8' || targetSquare[1] === '1') ? 'q' : '';
+      const userUciFull = userUci + promotionSuffix;
 
-      if (userUci === puzzle.solution_uci) {
-        // Correct
-        setStopwatchActive(false);
-        setSolveStatus('correct');
-        setArrows([[sourceSquare, targetSquare, 'green']]);
+      const expectedUci = solutionMoves[moveIndex] ?? '';
+      // Match ignoring promotion case differences (e.g. 'f7f8q' vs 'f7f8Q')
+      const isCorrect = userUciFull.toLowerCase() === expectedUci.toLowerCase()
+        || userUci.toLowerCase() === expectedUci.slice(0, 4).toLowerCase();
 
+      if (isCorrect) {
         // Apply move visually
-        const g = new Chess(puzzle.fen);
+        setArrows([[sourceSquare, targetSquare, 'green']]);
         try {
-          g.move({ from: sourceSquare, to: targetSquare, promotion: 'q' });
-          setGame(new Chess(g.fen()));
+          game.move({ from: sourceSquare, to: targetSquare, promotion: 'q' });
+          setGame(new Chess(game.fen()));
         } catch (_) {}
 
-        // Record attempt and show XP popup
-        api.recordAttempt({
-          profile_id: pid,
-          puzzle_id: puzzle.id,
-          batch_id: batchId,
-          circle: state?.current_circle ?? 1,
-          success: true,
-          time_taken_ms: solveTimeRef.current,
-          user_move: userUci,
-        }).then((res) => {
-          if (res?.xp_earned) {
-            setXpEarned(res.xp_earned);
-            setShowConfetti(true);
-            setTimeout(() => { setShowConfetti(false); setXpEarned(null); }, 2000);
-          }
-          // Save progress to localStorage for session resume
-          saveSessionToStorage({
-            profileId: pid,
-            batchId,
-            circle: state?.current_circle ?? 1,
-            puzzleIndex: puzzle.puzzle_number,
-          });
-        }).catch(console.error);
+        const isLastMove = moveIndex === solutionMoves.length - 1;
 
-        // Auto-advance
-        advancing.current = true;
-        setTimeout(loadNextPuzzle, AUTO_ADVANCE_CORRECT_MS);
+        if (isLastMove) {
+          // Puzzle complete
+          setStopwatchActive(false);
+          setSolveStatus('correct');
+
+          api.recordAttempt({
+            profile_id: pid,
+            puzzle_id: puzzle.id,
+            batch_id: batchId,
+            circle: state?.current_circle ?? 1,
+            success: true,
+            time_taken_ms: solveTimeRef.current,
+            user_move: userUci,
+          }).then((res) => {
+            if (res?.xp_earned) {
+              setXpEarned(res.xp_earned);
+              setShowConfetti(true);
+              setTimeout(() => { setShowConfetti(false); setXpEarned(null); }, 2000);
+            }
+            saveSessionToStorage({
+              profileId: pid,
+              batchId,
+              circle: state?.current_circle ?? 1,
+              puzzleIndex: puzzle.puzzle_number,
+            });
+          }).catch(console.error);
+
+          advancing.current = true;
+          setTimeout(loadNextPuzzle, AUTO_ADVANCE_CORRECT_MS);
+        } else {
+          // Intermediate correct move — advance index, keep timer running
+          setMoveIndex(moveIndex + 1);
+        }
         return true;
       } else {
-        // Wrong
+        // Wrong move at any index
         setStopwatchActive(false);
         setSolveStatus('wrong');
 
-        // Show correct move arrow
-        const [from, to] = [
-          puzzle.solution_uci.slice(0, 2),
-          puzzle.solution_uci.slice(2, 4),
-        ];
+        const expected = solutionMoves[moveIndex] ?? puzzle.solution_uci;
+        const from = expected.slice(0, 2);
+        const to = expected.slice(2, 4);
         setArrows([[from, to, 'red']]);
 
         api.recordAttempt({
@@ -154,7 +170,7 @@ function TrainingSession() {
         return false;
       }
     },
-    [puzzle, solveStatus, batchId, state, pid, loadNextPuzzle]
+    [puzzle, solveStatus, batchId, state, pid, loadNextPuzzle, solutionMoves, moveIndex, game]
   );
 
   const handleStopwatchStop = useCallback((ms) => {
@@ -223,6 +239,16 @@ function TrainingSession() {
 
       {/* Stopwatch */}
       <Stopwatch active={stopwatchActive} onStop={handleStopwatchStop} style={{ marginBottom: 8 }} />
+
+      {/* Multi-move progress indicator — only shown after first intermediate correct move */}
+      {moveIndex > 0 && solutionMoves.length > 1 && !solveStatus && (
+        <div
+          data-testid="move-progress"
+          style={{ textAlign: 'center', marginBottom: 6, color: '#facc15', fontSize: '0.85rem', fontWeight: 600 }}
+        >
+          Move {moveIndex + 1} of {solutionMoves.length}
+        </div>
+      )}
 
       {/* Board */}
       <div data-testid="chessboard-container">

@@ -22,7 +22,7 @@ app = FastAPI(title="Chess Intuition Trainer")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:3000"],
+    allow_origins=["http://localhost:5173", "http://localhost:5174", "http://localhost:3000"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -35,6 +35,13 @@ def startup():
     db = database.SessionLocal()
     try:
         seed_all(db)
+        # Phase 9: add solution_uci_line column if missing
+        from sqlalchemy import text, inspect
+        insp = inspect(database.engine)
+        columns = [c["name"] for c in insp.get_columns("puzzles")]
+        if "solution_uci_line" not in columns:
+            db.execute(text("ALTER TABLE puzzles ADD COLUMN solution_uci_line TEXT"))
+            db.commit()
     finally:
         db.close()
 
@@ -142,6 +149,62 @@ def verify_all_puzzles(chapter_id: int, db: Session = Depends(get_db)):
 
 
 # ---------------------------------------------------------------------------
+# Import answers (Phase 9: multi-move)
+# ---------------------------------------------------------------------------
+
+class ImportAnswersRequest(BaseModel):
+    answers_text: str
+
+
+@app.post("/api/chapters/{chapter_id}/import-answers")
+def import_answers(chapter_id: int, req: ImportAnswersRequest, db: Session = Depends(get_db)):
+    """Import answer text for a chapter and parse into UCI move sequences."""
+    import re
+    from extraction import parse_solution_to_uci
+
+    chapter = db.query(Chapter).get(chapter_id)
+    if not chapter:
+        raise HTTPException(status_code=404, detail="Chapter not found")
+
+    # Parse answers_text: each line starts with "N. <answer prose>"
+    answer_map = {}
+    for line in req.answers_text.strip().split("\n"):
+        line = line.strip()
+        if not line:
+            continue
+        m = re.match(r"^(\d+)\.\s*(.*)", line)
+        if m:
+            answer_map[int(m.group(1))] = m.group(2)
+
+    puzzles = (
+        db.query(Puzzle)
+        .filter(Puzzle.chapter_id == chapter_id)
+        .order_by(Puzzle.puzzle_number)
+        .all()
+    )
+
+    total = 0
+    parsed = 0
+    failed = []
+
+    for p in puzzles:
+        answer = answer_map.get(p.puzzle_number)
+        if not answer:
+            continue
+        total += 1
+        p.solution_line = answer
+        uci_line = parse_solution_to_uci(p.fen, answer)
+        if uci_line:
+            p.solution_uci_line = uci_line
+            parsed += 1
+        else:
+            failed.append(p.puzzle_number)
+
+    db.commit()
+    return {"total": total, "parsed": parsed, "failed": failed}
+
+
+# ---------------------------------------------------------------------------
 # Training endpoints
 # ---------------------------------------------------------------------------
 
@@ -180,6 +243,7 @@ def next_puzzle(profile_id: int, db: Session = Depends(get_db)):
             "solution_san": puzzle.solution_san,
             "solution_uci": puzzle.solution_uci,
             "solution_line": puzzle.solution_line,
+            "solution_uci_line": puzzle.solution_uci_line or [puzzle.solution_uci],
         }
     }
 

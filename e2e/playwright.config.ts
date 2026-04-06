@@ -8,8 +8,9 @@ export default defineConfig({
   fullyParallel: false,
   retries: 0,
   reporter: 'list',
-  globalSetup:    './setup/global-setup.ts',
-  globalTeardown: './setup/global-teardown.ts',
+  // globalSetup/globalTeardown intentionally omitted — test.sh handles
+  // test data lifecycle (python3 backend/test_setup.py create/destroy)
+  // before launching the UI. Re-add them only for headless CI runs.
   use: {
     baseURL: 'http://localhost:5173',
     trace: 'on-first-retry',
