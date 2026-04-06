@@ -243,9 +243,13 @@ def get_training_state(profile_id: int, db: DBSession) -> dict:
         elapsed = (datetime.utcnow() - session.started_at).total_seconds()
         session_time_remaining = max(0.0, SESSION_CAP_SECONDS - elapsed)
 
+    profile = db.query(Profile).get(profile_id)
+    profile_xp = profile.total_xp or 0 if profile else 0
+
     if not batch:
         return {
             "has_active_batch": False,
+            "total_xp": profile_xp,
             "session": _session_dict(session),
             "session_time_remaining_seconds": session_time_remaining,
         }
@@ -274,8 +278,10 @@ def get_training_state(profile_id: int, db: DBSession) -> dict:
         "total_puzzles": batch.total_puzzles,
         "status": batch.status,
         "circle_stats": circle_stats,
+        "total_xp": profile_xp,
         "session": _session_dict(session),
         "session_time_remaining_seconds": session_time_remaining,
+        "puzzle_ids": batch.puzzle_ids,
     }
 
 
