@@ -25,7 +25,7 @@ function StatusBadge({ chapterId, status }) {
         letterSpacing: 1,
       }}
     >
-      {status}
+      {status === 'pending' ? 'Awaiting JSON' : status}
     </span>
   );
 }

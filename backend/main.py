@@ -6,7 +6,7 @@ import os
 from dotenv import load_dotenv
 load_dotenv()
 
-from fastapi import FastAPI, Depends, HTTPException, BackgroundTasks
+from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
@@ -35,8 +35,8 @@ def startup():
     db = database.SessionLocal()
     try:
         seed_all(db)
-        from import_chapter1 import import_chapter1
-        import_chapter1(db)
+        from import_puzzles import import_all_available_chapters
+        import_all_available_chapters(db)
         # Phase 9: add solution_uci_line column if missing
         from sqlalchemy import text, inspect
         insp = inspect(database.engine)
@@ -72,34 +72,12 @@ def list_chapters(db: Session = Depends(get_db)):
     ]
 
 
-def _run_extraction(chapter_id: int):
-    """Background task: runs in a fresh DB session so it outlives the request."""
-    from extraction import extract_chapter
-    db = database.SessionLocal()
-    try:
-        result = extract_chapter(chapter_id, db)
-        return result
-    except Exception as e:
-        # Status is reset to "pending" inside extract_chapter on failure
-        import logging
-        logging.getLogger(__name__).error(f"Extraction failed for chapter {chapter_id}: {e}")
-    finally:
-        db.close()
-
-
 @app.post("/api/extract-chapter/{chapter_id}")
-def start_extraction(chapter_id: int, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
-    chapter = db.query(Chapter).get(chapter_id)
-    if not chapter:
-        raise HTTPException(status_code=404, detail="Chapter not found")
-    if chapter.extraction_status == "extracting":
-        raise HTTPException(status_code=409, detail="Extraction already in progress")
-
-    chapter.extraction_status = "extracting"
-    db.commit()
-
-    background_tasks.add_task(_run_extraction, chapter_id)
-    return {"status": "extracting", "chapter_id": chapter_id}
+def start_extraction(chapter_id: int, db: Session = Depends(get_db)):
+    raise HTTPException(
+        status_code=501,
+        detail="PDF extraction is disabled. Add chapterN_questions.json and chapterN_answers.json to the repo root and restart the server.",
+    )
 
 
 @app.get("/api/puzzles/unverified/{chapter_id}")
