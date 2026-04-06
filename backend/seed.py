@@ -40,6 +40,7 @@ PROFILES = [
     {"name": "Rishi", "role": "student", "uscf_rating": 1228},
     {"name": "Raghav", "role": "student", "uscf_rating": 1008},
     {"name": "Raj", "role": "parent", "uscf_rating": 0},
+    {"name": "Guest", "role": "student", "uscf_rating": 0},
 ]
 
 BADGE_DEFINITIONS = [
