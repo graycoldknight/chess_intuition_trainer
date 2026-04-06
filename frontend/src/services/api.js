@@ -1,4 +1,4 @@
-const BASE_URL = 'http://localhost:8000';
+const BASE_URL = `http://${window.location.hostname}:8000`;
 
 async function request(path, options = {}) {
   const res = await fetch(`${BASE_URL}${path}`, {

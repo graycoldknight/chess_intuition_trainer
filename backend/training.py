@@ -270,10 +270,19 @@ def get_training_state(profile_id: int, db: DBSession) -> dict:
         ).all()
         if attempts:
             correct = [a for a in attempts if a.success == 1]
+            times = sorted(a.time_taken_ms for a in correct)
+            n = len(times)
+            if n:
+                avg = int(sum(times) / n)
+                mid = n // 2
+                median = int(times[mid] if n % 2 else (times[mid - 1] + times[mid]) / 2)
+            else:
+                avg = median = None
             circle_stats[circle] = {
                 "total": len(attempts),
-                "correct": len(correct),
-                "avg_time_ms": int(sum(a.time_taken_ms for a in correct) / len(correct)) if correct else None,
+                "correct": n,
+                "avg_time_ms": avg,
+                "median_time_ms": median,
             }
 
     return {

@@ -63,6 +63,7 @@ function ResultsScreen() {
           <div style={{ display: 'flex', gap: 24, justifyContent: 'center', flexWrap: 'wrap' }}>
             <Stat label="Accuracy" value={pct(current.correct, current.total)} />
             <Stat label="Avg Time" value={fmt(current.avg_time_ms)} />
+            <Stat label="Median Time" value={fmt(current.median_time_ms)} />
             <Stat label="Puzzles" value={`${current.correct}/${current.total}`} />
           </div>
 
@@ -93,6 +94,7 @@ function ResultsScreen() {
               <div key={c} style={{ textAlign: 'center' }}>
                 <div style={{ color: '#a78bfa', fontSize: '0.75rem' }}>C{c}</div>
                 <div style={{ fontSize: '0.95rem', fontWeight: 600 }}>{fmt(stats.avg_time_ms)}</div>
+                <div style={{ color: '#60a5fa', fontSize: '0.75rem' }}>{fmt(stats.median_time_ms)}</div>
                 <div style={{ color: '#888', fontSize: '0.7rem' }}>{pct(stats.correct, stats.total)}</div>
               </div>
             ))}
