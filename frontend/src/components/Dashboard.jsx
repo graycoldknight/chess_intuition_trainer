@@ -151,7 +151,12 @@ function Dashboard() {
       ) : (
         <div data-testid="no-batch" style={{ textAlign: 'center', marginTop: 32, color: '#888' }}>
           <p>No active batch yet.</p>
-          <p style={{ fontSize: '0.85rem' }}>Ask Raj to create one for you.</p>
+          <button
+            onClick={() => api.createBatch(pid, 1).then(() => window.location.reload())}
+            style={{ marginTop: 8, padding: '10px 28px', background: '#7c3aed', color: '#fff', border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontSize: '1rem' }}
+          >
+            Start Chapter 1
+          </button>
         </div>
       )}
 
