@@ -69,9 +69,11 @@ When in plan mode:
 3. After the user approves the plan, always present these next steps before doing anything else:
 
    **Plan saved to `plan_phase<N>.md`. Recommended next steps:**
-   1. `/clear` — clear the context cache
-   2. `/model sonnet` — switch to Sonnet if currently in Opus
+   1. `/model sonnet` — switch model if currently in Opus (persists across `/clear`)
+   2. `/clear` — clear the context cache
    3. `execute @plan_phase<N>.md` — implement the plan
+
+   **To do it in two steps:** run `/model sonnet` first (if needed), then `/clear` and in the next message `execute @plan_phase<N>.md`.
 
 ## Key constraints
 
