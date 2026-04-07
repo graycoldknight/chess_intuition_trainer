@@ -176,6 +176,14 @@ function Dashboard() {
           🏆 Leaderboard
         </button>
       </div>
+      {pid === 3 && (
+        <button
+          onClick={() => navigate('/parent')}
+          style={{ ...btnStyle, width: '100%', marginTop: 12, background: '#1e1e2e', border: '1px solid #7c3aed', fontSize: '0.9rem', color: '#a78bfa' }}
+        >
+          ⚙️ Parent Panel
+        </button>
+      )}
     </div>
   );
 }
