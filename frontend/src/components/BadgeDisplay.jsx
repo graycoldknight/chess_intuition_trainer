@@ -24,12 +24,11 @@ function BadgeDisplay({ badges = [], earnedIds = [] }) {
             key={badge.key}
             data-testid={`badge-${badge.key}`}
             data-locked={String(!earned)}
-            title={badge.description}
             style={{
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
-              width: 80,
+              width: 110,
               padding: '8px 4px',
               borderRadius: 10,
               background: earned ? '#2a2a3a' : '#1e1e1e',
@@ -51,6 +50,21 @@ function BadgeDisplay({ badges = [], earnedIds = [] }) {
               }}
             >
               {badge.name}
+            </div>
+            <div
+              style={{
+                fontSize: '0.58rem',
+                color: '#555',
+                textAlign: 'center',
+                marginTop: 3,
+                lineHeight: 1.3,
+                display: '-webkit-box',
+                WebkitLineClamp: 2,
+                WebkitBoxOrient: 'vertical',
+                overflow: 'hidden',
+              }}
+            >
+              {badge.description}
             </div>
           </div>
         );

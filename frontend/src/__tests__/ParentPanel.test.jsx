@@ -19,6 +19,7 @@ vi.mock('../services/api', () => ({
   getPendingGraduations: vi.fn(),
   approveGraduation: vi.fn(),
   getUnverifiedPuzzles: vi.fn(),
+  getParentActivity: vi.fn(),
 }));
 
 import * as api from '../services/api';
@@ -59,6 +60,7 @@ describe('ParentPanel', () => {
     api.getPendingGraduations.mockResolvedValue(MOCK_GRADUATIONS);
     api.approveGraduation.mockResolvedValue({ batch_id: 1, status: 'graduated', next_chapter_id: 2 });
     api.getUnverifiedPuzzles.mockResolvedValue(MOCK_PUZZLES);
+    api.getParentActivity.mockResolvedValue({ children: [] });
   });
 
   // ---------------------------------------------------------------------------
@@ -83,13 +85,17 @@ describe('ParentPanel', () => {
   // Chapters tab
   // ---------------------------------------------------------------------------
 
-  it('shows Chapters tab content by default', async () => {
+  it('shows Chapters tab content when Chapters tab is clicked', async () => {
     renderPanel();
+    await waitFor(() => screen.getByTestId('tab-chapters'));
+    fireEvent.click(screen.getByTestId('tab-chapters'));
     await waitFor(() => expect(screen.getByTestId('chapters-tab')).toBeDefined());
   });
 
   it('Chapters tab lists all chapters', async () => {
     renderPanel();
+    await waitFor(() => screen.getByTestId('tab-chapters'));
+    fireEvent.click(screen.getByTestId('tab-chapters'));
     await waitFor(() => {
       expect(screen.getByText('Forks and Double Attacks')).toBeDefined();
       expect(screen.getByText('Pins and Skewers')).toBeDefined();
@@ -99,6 +105,8 @@ describe('ParentPanel', () => {
 
   it('Chapters tab shows extraction status badge per chapter', async () => {
     renderPanel();
+    await waitFor(() => screen.getByTestId('tab-chapters'));
+    fireEvent.click(screen.getByTestId('tab-chapters'));
     await waitFor(() => {
       const verified = screen.getByTestId('status-badge-1');
       expect(verified).toBeDefined();

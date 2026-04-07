@@ -260,8 +260,8 @@ describe('SessionTimer', () => {
     expect(timer.textContent).toMatch(/59:\d\d \/ 60:00/);
   });
 
-  it('shows near-zero when session started 59 minutes ago', () => {
-    const startedAt = new Date(Date.now() - 59 * 60 * 1000).toISOString();
+  it('shows near-zero when session started 59 minutes 30 seconds ago', () => {
+    const startedAt = new Date(Date.now() - (59 * 60 + 30) * 1000).toISOString();
     render(<SessionTimer sessionStartedAt={startedAt} onExpired={() => {}} />);
     const timer = screen.getByTestId('session-timer');
     // Should show ~00:xx

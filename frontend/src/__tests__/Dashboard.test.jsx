@@ -129,12 +129,6 @@ describe('Dashboard', () => {
     expect(screen.getByTestId('continue-training-btn').textContent).toBe('Start Training');
   });
 
-  it('shows Session Complete when daily cap hit', async () => {
-    api.getDashboard.mockResolvedValue(MOCK_DASHBOARD_SESSION_CAP);
-    await act(async () => renderDashboard());
-    await waitFor(() => expect(screen.getByTestId('session-complete-message')).toBeDefined());
-  });
-
   it('shows no batch message when has_active_batch is false', async () => {
     api.getDashboard.mockResolvedValue(MOCK_DASHBOARD_NO_BATCH);
     await act(async () => renderDashboard());

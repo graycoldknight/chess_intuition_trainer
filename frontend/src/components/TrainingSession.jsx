@@ -15,7 +15,7 @@ const PIECE_SYMBOLS = {
   wK: '♔', wQ: '♕', wR: '♖', wB: '♗', wN: '♘', wP: '♙',
   bK: '♚', bQ: '♛', bR: '♜', bB: '♝', bN: '♞', bP: '♟',
 };
-const AUTO_ADVANCE_CORRECT_MS = 1000;
+const AUTO_ADVANCE_CORRECT_MS = 2000;
 const AUTO_ADVANCE_WRONG_MS = 2000;
 
 // How often the stopwatch display refreshes per circle (coarser = less pressure)
@@ -271,7 +271,7 @@ function TrainingSession() {
         }
         return true;
       } else {
-        // Wrong move at any index
+        // Wrong move
         setStopwatchActive(false);
         setSolveStatus('wrong');
 
@@ -280,25 +280,39 @@ function TrainingSession() {
         const to = expected.slice(2, 4);
         setArrows([[from, to, 'red']]);
 
-        api.recordAttempt({
-          profile_id: pid,
-          puzzle_id: puzzle.id,
-          batch_id: batchId,
-          circle: state?.current_circle ?? 1,
-          success: false,
-          time_taken_ms: solveTimeRef.current,
-          user_move: userUci,
-        }).catch(console.error);
-
         advancing.current = true;
-        if (canEdit) {
+
+        if (moveIndex % 2 === 1) {
+          // Wrong opponent move — restart puzzle without recording a failure
           setTimeout(() => {
-            const next = browseIndexRef.current + 1;
-            if (next < puzzleIdsRef.current.length) loadPuzzleById(puzzleIdsRef.current[next], next);
+            advancing.current = false;
+            setSolveStatus(null);
+            setArrows([]);
+            setMoveIndex(0);
+            setGame(new Chess(puzzle.fen));
+            setStopwatchActive(true);
           }, AUTO_ADVANCE_WRONG_MS);
         } else {
-          const circle = state?.current_circle ?? 1;
-          setTimeout(() => loadNextPuzzle(circle), AUTO_ADVANCE_WRONG_MS);
+          // Wrong user move — record failure and advance
+          api.recordAttempt({
+            profile_id: pid,
+            puzzle_id: puzzle.id,
+            batch_id: batchId,
+            circle: state?.current_circle ?? 1,
+            success: false,
+            time_taken_ms: solveTimeRef.current,
+            user_move: userUci,
+          }).catch(console.error);
+
+          if (canEdit) {
+            setTimeout(() => {
+              const next = browseIndexRef.current + 1;
+              if (next < puzzleIdsRef.current.length) loadPuzzleById(puzzleIdsRef.current[next], next);
+            }, AUTO_ADVANCE_WRONG_MS);
+          } else {
+            const circle = state?.current_circle ?? 1;
+            setTimeout(() => loadNextPuzzle(circle), AUTO_ADVANCE_WRONG_MS);
+          }
         }
         return false;
       }
