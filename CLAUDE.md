@@ -61,6 +61,18 @@ cd frontend && npm test
 - `backend/test_setup.py create/destroy` manages test data
 - `test.sh` orchestrates full server lifecycle for Playwright
 
+## Planning
+
+When in plan mode:
+1. Always structure the plan using `@plan_template.md` as the template (project root).
+2. Save the plan file to the **project root** as `plan_phase<N>.md` (e.g. `plan_phase15.md`). Infer the phase number from context or ask if unclear.
+3. After the user approves the plan, always present these next steps before doing anything else:
+
+   **Plan saved to `plan_phase<N>.md`. Recommended next steps:**
+   1. `/clear` — clear the context cache
+   2. `/model sonnet` — switch to Sonnet if currently in Opus
+   3. `execute @plan_phase<N>.md` — implement the plan
+
 ## Key constraints
 
 - Stockfish binary at `backend/bin/stockfish-linux` (pre-compiled, don't replace)
