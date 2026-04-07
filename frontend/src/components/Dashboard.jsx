@@ -43,10 +43,6 @@ function Dashboard() {
   }
 
   const { profile, training, today } = data;
-  const hasSession = training.session_time_remaining_seconds != null;
-  const sessionCapHit =
-    hasSession && training.session_time_remaining_seconds === 0;
-
   const circleStats = training.circle_stats || {};
 
   return (
@@ -122,22 +118,13 @@ function Dashboard() {
             </div>
           )}
 
-          {sessionCapHit ? (
-            <div
-              data-testid="session-complete-message"
-              style={{ textAlign: 'center', marginTop: 24, color: '#f59e0b', fontWeight: 600 }}
-            >
-              Session Complete — come back tomorrow!
-            </div>
-          ) : (
-            <button
-              data-testid="continue-training-btn"
-              onClick={() => navigate(`/train/${pid}`)}
-              style={{ ...btnStyle, width: '100%', marginTop: 24, fontSize: '1.1rem' }}
-            >
-              {today.puzzles_attempted === 0 ? 'Start Training' : 'Continue Training'}
-            </button>
-          )}
+          <button
+            data-testid="continue-training-btn"
+            onClick={() => navigate(`/train/${pid}`)}
+            style={{ ...btnStyle, width: '100%', marginTop: 24, fontSize: '1.1rem' }}
+          >
+            {today.puzzles_attempted === 0 ? 'Start Training' : 'Continue Training'}
+          </button>
 
           {training.status === 'ready_to_graduate' && (
             <div

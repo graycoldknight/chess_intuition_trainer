@@ -459,7 +459,6 @@ function TrainingSession() {
         <span style={{ color: '#facc15', fontWeight: 700, fontSize: '0.9rem' }}>⚡ {totalXp} XP</span>
         <SessionTimer
           sessionStartedAt={session?.started_at}
-          onExpired={loadNextPuzzle}
         />
       </div>
 

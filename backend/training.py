@@ -66,10 +66,7 @@ def approve_graduation(batch_id: int, db: DBSession) -> Batch:
 
 def get_next_puzzle(profile_id: int, db: DBSession):
     """Return the next puzzle to solve, or None if session cap hit or circle done."""
-    # Session cap check
     session = _get_active_session(profile_id, db)
-    if session and _is_over_cap(session):
-        return None
 
     # Active batch
     batch = (
