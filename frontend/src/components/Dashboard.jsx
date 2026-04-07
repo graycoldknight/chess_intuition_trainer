@@ -109,6 +109,9 @@ function Dashboard() {
                     <div style={{ fontSize: '1rem', fontWeight: 700 }}>
                       {fmt(stats.avg_time_ms)}
                     </div>
+                    <div style={{ color: '#60a5fa', fontSize: '0.7rem' }}>
+                      {fmt(stats.median_time_ms)}
+                    </div>
                     <div style={{ color: '#888', fontSize: '0.7rem' }}>
                       {stats.correct}/{stats.total}
                     </div>
