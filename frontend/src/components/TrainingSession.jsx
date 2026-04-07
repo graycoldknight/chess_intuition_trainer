@@ -153,7 +153,7 @@ function TrainingSession() {
     })();
   }, [pid]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const loadNextPuzzle = useCallback(async () => {
+  const loadNextPuzzle = useCallback(async (fromCircle) => {
     advancing.current = false;
     setSolveStatus(null);
     setArrows([]);
@@ -165,6 +165,12 @@ function TrainingSession() {
     if (!resp.puzzle) {
       setPuzzle(null);
       setStopwatchActive(false);
+      return;
+    }
+
+    // Circle just advanced — show results before starting next circle
+    if (fromCircle != null && resp.current_circle != null && resp.current_circle !== fromCircle) {
+      navigate(`/results/${pid}`, { replace: true });
       return;
     }
 
@@ -242,7 +248,8 @@ function TrainingSession() {
               if (next < puzzleIdsRef.current.length) loadPuzzleById(puzzleIdsRef.current[next], next);
             }, AUTO_ADVANCE_CORRECT_MS);
           } else {
-            setTimeout(loadNextPuzzle, AUTO_ADVANCE_CORRECT_MS);
+            const circle = state?.current_circle ?? 1;
+            setTimeout(() => loadNextPuzzle(circle), AUTO_ADVANCE_CORRECT_MS);
           }
         } else {
           // Intermediate correct move — advance index, keep timer running
@@ -276,7 +283,8 @@ function TrainingSession() {
             if (next < puzzleIdsRef.current.length) loadPuzzleById(puzzleIdsRef.current[next], next);
           }, AUTO_ADVANCE_WRONG_MS);
         } else {
-          setTimeout(loadNextPuzzle, AUTO_ADVANCE_WRONG_MS);
+          const circle = state?.current_circle ?? 1;
+          setTimeout(() => loadNextPuzzle(circle), AUTO_ADVANCE_WRONG_MS);
         }
         return false;
       }

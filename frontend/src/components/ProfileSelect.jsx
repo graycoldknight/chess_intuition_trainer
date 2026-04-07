@@ -5,7 +5,6 @@ const PROFILES = [
   { id: 1, name: 'Rishi', role: 'student', emoji: '♟️' },
   { id: 2, name: 'Raghav', role: 'student', emoji: '♞' },
   { id: 3, name: 'Raj', role: 'parent', emoji: '👑' },
-  { id: 4, name: 'Guest', role: 'student', emoji: '🎲' },
 ];
 
 function ProfileSelect() {

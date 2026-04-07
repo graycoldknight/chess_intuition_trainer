@@ -4,8 +4,9 @@ Called from e2e/setup/global-setup.ts and global-teardown.ts.
 Uses the same SQLAlchemy session as the backend so data is immediately visible to the API.
 
 Usage:
-  python test_setup.py create   — inserts Test profile (ID 99) + Chapter 1 batch + session
-  python test_setup.py destroy  — removes all Test profile data
+  python test_setup.py create         — inserts Test profile (ID 99) + Chapter 1 batch (circle 2, stats seeded)
+  python test_setup.py create_circle1 — minimal 1-puzzle batch at circle 1 (for circle-completion E2E test)
+  python test_setup.py destroy        — removes all Test profile data
 """
 
 import sys
@@ -183,12 +184,78 @@ def _import_chapter1_answers(db):
     print(f"  ✔  Populated solution_uci_line for {parsed}/{len(puzzles)} chapter 1 puzzles")
 
 
+def create_circle1(db):
+    """Minimal setup for the circle-completion E2E test.
+
+    Creates profile 99 with a batch at circle 1 containing ONLY the synthetic
+    mate-in-1 puzzle (b4b8).  Solving that one puzzle completes circle 1 and
+    should navigate the frontend to the results screen.
+    """
+    destroy(db)
+
+    synthetic = db.query(Puzzle).filter(
+        Puzzle.chapter_id == CHAPTER_ID,
+        Puzzle.puzzle_number == SYNTHETIC_PUZZLE_NUMBER,
+    ).first()
+    if not synthetic:
+        synthetic = Puzzle(
+            chapter_id=CHAPTER_ID,
+            puzzle_number=SYNTHETIC_PUZZLE_NUMBER,
+            fen=SYNTHETIC_FEN,
+            turn="w",
+            solution_san="Rb8#",
+            solution_uci=SYNTHETIC_UCI,
+            solution_line="1. Rb8#",
+            solution_uci_line=[SYNTHETIC_UCI],
+            verified=1,
+            extraction_confidence=1.0,
+        )
+        db.add(synthetic)
+        db.flush()
+
+    profile = Profile(
+        id=PROFILE_ID,
+        name="Test",
+        role="student",
+        uscf_rating=1000,
+        total_xp=0,
+        current_streak=0,
+        longest_streak=0,
+    )
+    db.add(profile)
+    db.flush()
+
+    batch = Batch(
+        profile_id=PROFILE_ID,
+        chapter_id=CHAPTER_ID,
+        puzzle_ids=[synthetic.id],
+        total_puzzles=1,
+        current_circle=1,
+        status="active",
+    )
+    db.add(batch)
+    db.flush()
+
+    session = TrainingSession(
+        profile_id=PROFILE_ID,
+        started_at=datetime.utcnow(),
+        puzzles_attempted=0,
+        puzzles_correct=0,
+        xp_earned=0,
+    )
+    db.add(session)
+    db.commit()
+    print(f"✔  Test profile ({PROFILE_ID}) created for circle-completion test — batch {batch.id}")
+
+
 if __name__ == "__main__":
     cmd = sys.argv[1] if len(sys.argv) > 1 else "create"
     db = SessionLocal()
     try:
         if cmd == "destroy":
             destroy(db)
+        elif cmd == "create_circle1":
+            create_circle1(db)
         else:
             create(db)
     finally:

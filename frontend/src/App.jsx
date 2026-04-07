@@ -19,6 +19,7 @@ function App() {
         <Route path="/badges/:profileId" element={<BadgesPage />} />
         <Route path="/leaderboard" element={<LeaderboardPage />} />
         <Route path="/parent" element={<ParentPanel />} />
+        <Route path="/guest" element={<Navigate to="/dashboard/4" replace />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </div>

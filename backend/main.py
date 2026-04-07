@@ -210,9 +210,12 @@ def get_training_state(profile_id: int, db: Session = Depends(get_db)):
 
 @app.get("/api/training/next-puzzle/{profile_id}")
 def next_puzzle(profile_id: int, db: Session = Depends(get_db)):
+    from models import Batch
+    batch = db.query(Batch).filter(Batch.profile_id == profile_id, Batch.status == "active").first()
+    current_circle = batch.current_circle if batch else None
     puzzle = training.get_next_puzzle(profile_id=profile_id, db=db)
     if puzzle is None:
-        return {"puzzle": None}
+        return {"puzzle": None, "current_circle": current_circle}
     return {
         "puzzle": {
             "id": puzzle.id,
@@ -224,7 +227,8 @@ def next_puzzle(profile_id: int, db: Session = Depends(get_db)):
             "solution_uci": puzzle.solution_uci,
             "solution_line": puzzle.solution_line,
             "solution_uci_line": puzzle.solution_uci_line or [puzzle.solution_uci],
-        }
+        },
+        "current_circle": current_circle,
     }
 
 
