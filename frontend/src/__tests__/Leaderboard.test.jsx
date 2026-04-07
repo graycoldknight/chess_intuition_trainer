@@ -81,4 +81,16 @@ describe('Leaderboard', () => {
     render(<Leaderboard data={[]} />);
     expect(screen.getByTestId('leaderboard')).toBeDefined();
   });
+
+  it('renders higher-XP player before lower-XP player', () => {
+    const data = [
+      { id: 1, name: 'Rishi',  total_xp: 643,  current_streak: 3, chapters_graduated: 0 },
+      { id: 2, name: 'Raghav', total_xp: 1494, current_streak: 1, chapters_graduated: 0 },
+    ];
+    render(<Leaderboard data={data} />);
+    const rows = screen.getAllByRole('row');
+    // rows[0] is the header, rows[1] should be Raghav (higher XP)
+    expect(rows[1]).toHaveTextContent('Raghav');
+    expect(rows[2]).toHaveTextContent('Rishi');
+  });
 });

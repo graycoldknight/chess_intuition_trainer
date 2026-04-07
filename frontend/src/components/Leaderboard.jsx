@@ -42,7 +42,7 @@ function Leaderboard({ data = [] }) {
           </tr>
         </thead>
         <tbody>
-          {data.map((row) => {
+          {[...data].sort((a, b) => (b.total_xp ?? 0) - (a.total_xp ?? 0)).map((row) => {
             const nameSlug = row.name.toLowerCase();
             return (
               <tr key={row.id} data-testid={`leaderboard-${nameSlug}`}>
