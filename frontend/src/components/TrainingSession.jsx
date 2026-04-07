@@ -10,6 +10,7 @@ import * as api from '../services/api';
 import { saveSessionToStorage, loadSessionFromStorage, clearSessionFromStorage } from '../services/sessionStorage';
 
 const PROFILE_NAMES = { 1: 'Rishi', 2: 'Raghav', 3: 'Raj' };
+const EDIT_PROFILES = new Set([3, 99]); // Raj (parent) + test profile
 const PIECE_SYMBOLS = {
   wK: '♔', wQ: '♕', wR: '♖', wB: '♗', wN: '♘', wP: '♙',
   bK: '♚', bQ: '♛', bR: '♜', bB: '♝', bN: '♞', bP: '♟',
@@ -83,6 +84,7 @@ function TrainingSession() {
   const { profileId } = useParams();
   const navigate = useNavigate();
   const pid = parseInt(profileId, 10);
+  const canEdit = EDIT_PROFILES.has(pid);
 
   const [puzzle, setPuzzle] = useState(null);
   const [puzzleLoading, setPuzzleLoading] = useState(true); // true until first fetch completes
@@ -112,7 +114,7 @@ function TrainingSession() {
   const browseIndexRef = useRef(0);
   const [showAnswer, setShowAnswer] = useState(false);
 
-  // Edit mode (test profile 99 only)
+  // Edit mode (Raj + test profile)
   const [editMode, setEditMode] = useState(false);
   const [editFen, setEditFen] = useState('');
   const [editTurn, setEditTurn] = useState('w');
@@ -133,7 +135,7 @@ function TrainingSession() {
       if (trainingState.has_active_batch) {
         setBatchId(trainingState.batch_id);
 
-        if (pid === 99 && trainingState.puzzle_ids) {
+        if (canEdit && trainingState.puzzle_ids) {
           setPuzzleIds(trainingState.puzzle_ids);
           puzzleIdsRef.current = trainingState.puzzle_ids;
         }
@@ -183,7 +185,7 @@ function TrainingSession() {
     setMoveIndex(0);
     setShowAnswer(false);
     setStopwatchActive(true);
-    if (pid === 99) {
+    if (canEdit) {
       const idx = puzzleIdsRef.current.indexOf(p.id);
       if (idx >= 0) { setBrowseIndex(idx); browseIndexRef.current = idx; }
     }
@@ -242,7 +244,7 @@ function TrainingSession() {
           }).catch(console.error);
 
           advancing.current = true;
-          if (pid === 99) {
+          if (canEdit) {
             setTimeout(() => {
               const next = browseIndexRef.current + 1;
               if (next < puzzleIdsRef.current.length) loadPuzzleById(puzzleIdsRef.current[next], next);
@@ -277,7 +279,7 @@ function TrainingSession() {
         }).catch(console.error);
 
         advancing.current = true;
-        if (pid === 99) {
+        if (canEdit) {
           setTimeout(() => {
             const next = browseIndexRef.current + 1;
             if (next < puzzleIdsRef.current.length) loadPuzzleById(puzzleIdsRef.current[next], next);
@@ -468,7 +470,7 @@ function TrainingSession() {
         {state?.is_randomized_circle && (
           <span style={{ background: '#b45309', color: '#fef3c7', borderRadius: 6, padding: '2px 8px', fontSize: '0.78rem', fontWeight: 700 }}>⚡ Challenge Mode</span>
         )}
-        {pid === 99 && !editMode && (
+        {canEdit && !editMode && (
           <>
             <button onClick={handlePrev} disabled={browseIndex <= 0} style={editBtnStyle}>← Prev</button>
             <span style={{ color: '#666', fontSize: '0.78rem' }}>{browseIndex + 1} / {puzzleIds.length}</span>
@@ -498,7 +500,7 @@ function TrainingSession() {
       )}
 
       {editMode ? (
-        /* ── Edit mode (profile 99 only) ── */
+        /* ── Edit mode (Raj + test profile) ── */
         <div>
           <div data-testid="chessboard-container">
             <Chessboard
@@ -610,7 +612,7 @@ function TrainingSession() {
               Wrong — {puzzle.solution_san} was right
             </div>
           )}
-          {pid === 99 && showAnswer && (
+          {canEdit && showAnswer && (
             <div style={{
               marginTop: 14,
               background: '#111827',
