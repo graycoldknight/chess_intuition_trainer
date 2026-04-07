@@ -21,6 +21,7 @@ function Dashboard() {
 
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
+  const [selectedCircle, setSelectedCircle] = useState(null);
 
   useEffect(() => {
     api.getDashboard(pid)
@@ -104,20 +105,52 @@ function Dashboard() {
               <div style={cardLabelStyle}>Speed Trend</div>
               <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
                 {Object.entries(circleStats).map(([circle, stats]) => (
-                  <div key={circle} style={{ textAlign: 'center' }}>
+                  <div
+                    key={circle}
+                    onClick={() => setSelectedCircle(selectedCircle === circle ? null : circle)}
+                    style={{
+                      textAlign: 'center',
+                      cursor: 'pointer',
+                      padding: '6px 8px',
+                      borderRadius: 8,
+                      background: selectedCircle === circle ? '#2d2540' : 'transparent',
+                      border: `1px solid ${selectedCircle === circle ? '#a78bfa' : 'transparent'}`,
+                      transition: 'background 0.15s',
+                    }}
+                  >
                     <div style={{ color: '#a78bfa', fontSize: '0.75rem' }}>C{circle}</div>
-                    <div style={{ fontSize: '1rem', fontWeight: 700 }}>
-                      {fmt(stats.avg_time_ms)}
-                    </div>
-                    <div style={{ color: '#60a5fa', fontSize: '0.7rem' }}>
-                      {fmt(stats.median_time_ms)}
-                    </div>
-                    <div style={{ color: '#888', fontSize: '0.7rem' }}>
-                      {stats.correct}/{stats.total}
-                    </div>
+                    <div style={{ fontSize: '1rem', fontWeight: 700 }}>{fmt(stats.avg_time_ms)}</div>
+                    <div style={{ color: '#60a5fa', fontSize: '0.7rem' }}>{fmt(stats.median_time_ms)}</div>
+                    <div style={{ color: '#888', fontSize: '0.7rem' }}>{stats.correct}/{stats.total}</div>
                   </div>
                 ))}
               </div>
+              {selectedCircle && (() => {
+                const s = circleStats[selectedCircle];
+                const prevKey = String(Number(selectedCircle) - 1);
+                const prev = circleStats[prevKey];
+                const accuracy = s.total > 0 ? Math.round((s.correct / s.total) * 100) : null;
+                let improvement = null;
+                if (s.avg_time_ms && prev?.avg_time_ms) {
+                  const delta = prev.avg_time_ms - s.avg_time_ms;
+                  improvement = Math.round((delta / prev.avg_time_ms) * 100);
+                }
+                return (
+                  <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid #333', display: 'flex', gap: 20, flexWrap: 'wrap' }}>
+                    <Stat label="Accuracy" value={accuracy != null ? accuracy + '%' : '--'} />
+                    <Stat label="Avg Time" value={fmt(s.avg_time_ms)} />
+                    <Stat label="Median" value={fmt(s.median_time_ms)} />
+                    <Stat label="Solved" value={`${s.correct}/${s.total}`} />
+                    {improvement != null && (
+                      <Stat
+                        label={`vs C${prevKey}`}
+                        value={(improvement >= 0 ? '+' : '') + improvement + '%'}
+                        valueStyle={{ color: improvement >= 0 ? '#4ade80' : '#f87171' }}
+                      />
+                    )}
+                  </div>
+                );
+              })()}
             </div>
           )}
 
@@ -178,10 +211,10 @@ function Dashboard() {
   );
 }
 
-function Stat({ label, value }) {
+function Stat({ label, value, valueStyle }) {
   return (
     <div>
-      <div style={{ fontSize: '1.2rem', fontWeight: 700 }}>{value}</div>
+      <div style={{ fontSize: '1.2rem', fontWeight: 700, ...valueStyle }}>{value}</div>
       <div style={{ color: '#888', fontSize: '0.75rem' }}>{label}</div>
     </div>
   );
