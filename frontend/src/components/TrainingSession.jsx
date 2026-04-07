@@ -102,6 +102,7 @@ function TrainingSession() {
   const [totalXp, setTotalXp] = useState(0);
   const solveTimeRef = useRef(0);
   const advancing = useRef(false);
+  const sessionRef = useRef(null);
 
   // Multi-move state
   const [solutionMoves, setSolutionMoves] = useState([]); // ['f3f6', 'h6g7', 'f6b6']
@@ -144,8 +145,10 @@ function TrainingSession() {
         if (!trainingState.session) {
           const sess = await api.startSession(pid);
           setSession(sess);
+          sessionRef.current = sess;
         } else {
           setSession(trainingState.session);
+          sessionRef.current = trainingState.session;
         }
 
         loadNextPuzzle();
@@ -154,6 +157,15 @@ function TrainingSession() {
       }
     })();
   }, [pid]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // End session when navigating away
+  useEffect(() => {
+    return () => {
+      if (sessionRef.current?.id) {
+        api.endSession(sessionRef.current.id);
+      }
+    };
+  }, []);
 
   const loadNextPuzzle = useCallback(async (fromCircle) => {
     advancing.current = false;

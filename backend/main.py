@@ -35,8 +35,9 @@ def startup():
     db = database.SessionLocal()
     try:
         seed_all(db)
-        from import_puzzles import import_all_available_chapters
-        import_all_available_chapters(db)
+        if not os.getenv("TESTING"):
+            from import_puzzles import import_all_available_chapters
+            import_all_available_chapters(db)
         # Phase 9: add solution_uci_line column if missing
         from sqlalchemy import text, inspect
         insp = inspect(database.engine)
@@ -334,6 +335,96 @@ def get_pending_graduations(db: Session = Depends(get_db)):
             "status": b.status,
         })
     return result
+
+
+@app.get("/api/parent/activity")
+def get_parent_activity(db: Session = Depends(get_db)):
+    """Snapshot of all student profiles for the live parent monitor.
+    Returns recent attempts + current puzzle for each child.
+    Polled every 3 seconds by the frontend.
+    """
+    from training import get_next_puzzle
+    from datetime import timezone
+    from models import Batch, Attempt
+
+    students = db.query(Profile).filter(Profile.role == "student").order_by(Profile.id).all()
+    children = []
+
+    for student in students:
+        # Active session
+        session = (
+            db.query(TrainingSession)
+            .filter(TrainingSession.profile_id == student.id, TrainingSession.ended_at == None)
+            .order_by(TrainingSession.started_at.desc())
+            .first()
+        )
+
+        # Active batch
+        batch = (
+            db.query(Batch)
+            .filter(
+                Batch.profile_id == student.id,
+                Batch.status.in_(["active", "ready_to_graduate"]),
+            )
+            .first()
+        )
+
+        # Current puzzle (next to be solved — pure read)
+        next_puz = get_next_puzzle(student.id, db) if batch else None
+        current_puzzle = None
+        if next_puz:
+            chapter = db.query(Chapter).get(next_puz.chapter_id)
+            current_puzzle = {
+                "id": next_puz.id,
+                "puzzle_number": next_puz.puzzle_number,
+                "fen": next_puz.fen,
+                "turn": next_puz.turn,
+                "chapter_title": chapter.title if chapter else "",
+            }
+
+        # Recent attempts (last 15, newest first) joined with puzzle + chapter
+        recent_rows = (
+            db.query(Attempt, Puzzle, Chapter)
+            .join(Puzzle, Attempt.puzzle_id == Puzzle.id)
+            .join(Chapter, Puzzle.chapter_id == Chapter.id)
+            .filter(Attempt.profile_id == student.id)
+            .order_by(Attempt.attempted_at.desc())
+            .limit(15)
+            .all()
+        )
+        recent_attempts = [
+            {
+                "puzzle_number": puz.puzzle_number,
+                "chapter_title": ch.title,
+                "circle": att.circle,
+                "success": bool(att.success),
+                "time_taken_ms": att.time_taken_ms,
+                "attempted_at": att.attempted_at.isoformat(),
+            }
+            for att, puz, ch in recent_rows
+        ]
+
+        children.append({
+            "profile_id": student.id,
+            "name": student.name,
+            "total_xp": student.total_xp or 0,
+            "current_streak": student.current_streak or 0,
+            "session": {
+                "started_at": session.started_at.isoformat(),
+                "puzzles_attempted": session.puzzles_attempted or 0,
+                "puzzles_correct": session.puzzles_correct or 0,
+            } if session else None,
+            "training": {
+                "has_active_batch": bool(batch),
+                "chapter_id": batch.chapter_id if batch else None,
+                "current_circle": batch.current_circle if batch else None,
+                "status": batch.status if batch else None,
+            },
+            "current_puzzle": current_puzzle,
+            "recent_attempts": recent_attempts,
+        })
+
+    return {"children": children, "refreshed_at": datetime.utcnow().isoformat()}
 
 
 @app.post("/api/training/approve-graduation/{batch_id}")

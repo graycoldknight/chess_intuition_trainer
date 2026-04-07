@@ -210,3 +210,109 @@ def test_create_batch_succeeds_with_verified_puzzles(test_client, test_engine):
     assert data["chapter_id"] == 1
     assert data["total_puzzles"] == 1
     assert data["status"] == "active"
+
+
+# ---------------------------------------------------------------------------
+# GET /api/parent/activity  (Phase 11)
+# ---------------------------------------------------------------------------
+
+def seed_verified_puzzles(db, chapter_id=1, count=3):
+    """Mark the first `count` puzzles in the chapter as verified.
+    Works whether puzzles were pre-imported by the startup event or not.
+    """
+    from models import Puzzle, Chapter
+    chapter = db.query(Chapter).get(chapter_id)
+    if chapter:
+        chapter.extraction_status = "verified"
+    existing = (
+        db.query(Puzzle)
+        .filter(Puzzle.chapter_id == chapter_id)
+        .order_by(Puzzle.puzzle_number)
+        .limit(count)
+        .all()
+    )
+    # Update existing puzzles to verified
+    for p in existing:
+        p.verified = 1
+    # If not enough puzzles exist, insert the missing ones
+    existing_nums = {p.puzzle_number for p in existing}
+    for i in range(1, count + 1):
+        if i not in existing_nums:
+            db.add(Puzzle(
+                chapter_id=chapter_id,
+                puzzle_number=i,
+                fen="rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1",
+                turn="b",
+                solution_san="e5",
+                solution_uci="e7e5",
+                verified=1,
+            ))
+    db.commit()
+
+
+def test_parent_activity_returns_children(test_client):
+    resp = test_client.get("/api/parent/activity")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert "children" in data
+    assert "refreshed_at" in data
+    assert isinstance(data["children"], list)
+
+
+def test_parent_activity_child_shape(test_client, test_engine):
+    from sqlalchemy.orm import sessionmaker
+    TestSession = sessionmaker(bind=test_engine)
+    db = TestSession()
+    seed_verified_puzzles(db)
+    db.close()
+
+    resp = test_client.get("/api/parent/activity")
+    data = resp.json()
+    students = [c for c in data["children"] if c["name"] in ("Rishi", "Raghav")]
+    assert len(students) >= 2
+    child = students[0]
+    assert "profile_id" in child
+    assert "name" in child
+    assert "total_xp" in child
+    assert "session" in child
+    assert "training" in child
+    assert "current_puzzle" in child
+    assert "recent_attempts" in child
+    assert isinstance(child["recent_attempts"], list)
+
+
+def test_parent_activity_excludes_parent_profiles(test_client):
+    resp = test_client.get("/api/parent/activity")
+    data = resp.json()
+    names = [c["name"] for c in data["children"]]
+    assert "Raj" not in names
+
+
+def test_parent_activity_recent_attempts_shape(test_client, test_engine):
+    """When a child has attempts, they should appear in recent_attempts."""
+    from sqlalchemy.orm import sessionmaker
+    TestSession = sessionmaker(bind=test_engine)
+    db = TestSession()
+    seed_verified_puzzles(db, count=3)
+    db.close()
+
+    batch_resp = test_client.post("/api/training/create-batch", json={"profile_id": 1, "chapter_id": 1})
+    batch_id = batch_resp.json()["batch_id"]
+    puzzle_resp = test_client.get("/api/training/next-puzzle/1")
+    puzzle_id = puzzle_resp.json()["puzzle"]["id"]
+    test_client.post("/api/training/attempt", json={
+        "profile_id": 1, "puzzle_id": puzzle_id, "batch_id": batch_id,
+        "circle": 1, "success": True, "time_taken_ms": 7500, "user_move": "e7e5",
+    })
+
+    resp = test_client.get("/api/parent/activity")
+    data = resp.json()
+    rishi = next(c for c in data["children"] if c["profile_id"] == 1)
+    assert len(rishi["recent_attempts"]) >= 1
+    attempt = rishi["recent_attempts"][0]
+    assert "puzzle_number" in attempt
+    assert "chapter_title" in attempt
+    assert "success" in attempt
+    assert "time_taken_ms" in attempt
+    assert attempt["success"] is True
+    assert attempt["time_taken_ms"] == 7500

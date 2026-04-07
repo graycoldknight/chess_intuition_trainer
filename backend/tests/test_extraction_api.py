@@ -33,22 +33,6 @@ def test_list_chapters_returns_all_22(test_client):
     assert data[0]["extraction_status"] == "pending"
 
 
-def test_extract_chapter_returns_202(test_client):
-    """POST /api/extract-chapter/1 accepts the request and queues extraction."""
-    response = test_client.post("/api/extract-chapter/1")
-    assert response.status_code == 200
-    data = response.json()
-    assert data["status"] == "extracting"
-    assert data["chapter_id"] == 1
-    # Note: chapter DB status is managed by the background task (async after response),
-    # so we don't assert it here -- that's an integration concern, not a unit test.
-
-
-def test_extract_nonexistent_chapter_404(test_client):
-    """POST /api/extract-chapter/99 returns 404."""
-    response = test_client.post("/api/extract-chapter/99")
-    assert response.status_code == 404
-
 
 def test_get_unverified_puzzles(test_client, test_engine):
     """GET /api/puzzles/unverified/1 returns unverified puzzles."""

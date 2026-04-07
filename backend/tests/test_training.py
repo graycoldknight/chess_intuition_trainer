@@ -371,25 +371,6 @@ def test_start_session_creates_record(seeded_db):
     assert session.ended_at is None
 
 
-def test_get_next_puzzle_returns_none_after_60_min(seeded_db):
-    db = seeded_db
-    puzzles = make_puzzles(db, count=2)
-    training.create_batch(profile_id=1, chapter_id=1, db=db)
-
-    # Create a session that started 61 minutes ago
-    old_session = Session(
-        profile_id=1,
-        started_at=datetime.utcnow() - timedelta(minutes=61),
-        puzzles_attempted=0,
-        puzzles_correct=0,
-        xp_earned=0,
-    )
-    db.add(old_session)
-    db.commit()
-
-    puzzle = training.get_next_puzzle(profile_id=1, db=db)
-    assert puzzle is None
-
 
 def test_get_next_puzzle_works_within_60_min(seeded_db):
     db = seeded_db

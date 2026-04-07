@@ -7,6 +7,9 @@ import sys
 import os
 import pytest
 
+# Prevent startup event from running import_all_available_chapters() against the test DB
+os.environ["TESTING"] = "1"
+
 # Add backend directory to path so imports work
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
