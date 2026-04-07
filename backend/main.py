@@ -491,6 +491,118 @@ def get_dashboard(profile_id: int, db: Session = Depends(get_db)):
     }
 
 
+@app.get("/api/analytics/{profile_id}")
+def get_analytics(profile_id: int, db: Session = Depends(get_db)):
+    import json, statistics
+    from datetime import timedelta
+    from collections import defaultdict
+    from models import Batch, Attempt, PuzzleMastery
+
+    profile = db.query(Profile).get(profile_id)
+    if not profile:
+        raise HTTPException(status_code=404, detail="Profile not found")
+
+    # Active or ready-to-graduate batch
+    batch = db.query(Batch).filter(
+        Batch.profile_id == profile_id,
+        Batch.status.in_(["active", "ready_to_graduate"]),
+    ).first()
+
+    circle_perf = []
+    time_distribution = []
+    hard_puzzles = []
+
+    if batch:
+        puzzle_ids = (
+            json.loads(batch.puzzle_ids)
+            if isinstance(batch.puzzle_ids, str)
+            else batch.puzzle_ids
+        )
+        batch_attempts = db.query(Attempt).filter(Attempt.batch_id == batch.id).all()
+
+        # Group attempts by circle
+        by_circle = defaultdict(list)
+        all_times = []
+        for a in batch_attempts:
+            by_circle[a.circle].append(a)
+            if a.time_taken_ms:
+                all_times.append(a.time_taken_ms)
+
+        for circle in sorted(by_circle):
+            attempts = by_circle[circle]
+            times = [a.time_taken_ms for a in attempts if a.time_taken_ms]
+            correct = sum(1 for a in attempts if a.success)
+            circle_perf.append({
+                "circle": circle,
+                "avg_ms": round(sum(times) / len(times)) if times else None,
+                "median_ms": round(statistics.median(times)) if times else None,
+                "correct": correct,
+                "total": len(attempts),
+            })
+
+        # Time distribution buckets
+        buckets = [
+            ("<5s", 0, 5000),
+            ("5-10s", 5000, 10000),
+            ("10-15s", 10000, 15000),
+            ("15-20s", 15000, 20000),
+            ("20-30s", 20000, 30000),
+            ("30s+", 30000, None),
+        ]
+        for label, lo, hi in buckets:
+            count = sum(1 for t in all_times if t >= lo and (hi is None or t < hi))
+            time_distribution.append({"bucket": label, "count": count})
+
+        # Hardest puzzles by wrong attempts
+        mastery_rows = (
+            db.query(PuzzleMastery, Puzzle)
+            .join(Puzzle, PuzzleMastery.puzzle_id == Puzzle.id)
+            .filter(
+                PuzzleMastery.profile_id == profile_id,
+                PuzzleMastery.puzzle_id.in_(puzzle_ids),
+                PuzzleMastery.total_wrong > 0,
+            )
+            .order_by(PuzzleMastery.total_wrong.desc())
+            .limit(10)
+            .all()
+        )
+        hard_puzzles = [
+            {
+                "puzzle_number": p.puzzle_number,
+                "chapter_id": p.chapter_id,
+                "wrong_count": m.total_wrong,
+                "best_time_ms": m.best_time_ms,
+            }
+            for m, p in mastery_rows
+        ]
+
+    # Daily activity — last 30 days from closed sessions
+    cutoff = datetime.utcnow() - timedelta(days=30)
+    sessions = (
+        db.query(TrainingSession)
+        .filter(
+            TrainingSession.profile_id == profile_id,
+            TrainingSession.started_at >= cutoff,
+            TrainingSession.ended_at.isnot(None),
+        )
+        .all()
+    )
+    daily = defaultdict(lambda: {"attempted": 0, "correct": 0})
+    for s in sessions:
+        day = s.started_at.strftime("%Y-%m-%d")
+        daily[day]["attempted"] += s.puzzles_attempted or 0
+        daily[day]["correct"] += s.puzzles_correct or 0
+    daily_activity = [{"date": d, **v} for d, v in sorted(daily.items())]
+
+    return {
+        "profile_name": profile.name,
+        "circle_perf": circle_perf,
+        "daily_activity": daily_activity,
+        "time_distribution": time_distribution,
+        "hard_puzzles": hard_puzzles,
+    }
+
+
 # ---------------------------------------------------------------------------
 # Gamification endpoints
 # ---------------------------------------------------------------------------

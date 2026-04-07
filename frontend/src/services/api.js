@@ -17,6 +17,7 @@ export const getProfiles = () => request('/api/profiles');
 
 // Dashboard
 export const getDashboard = (profileId) => request(`/api/dashboard/${profileId}`);
+export const getAnalytics = (profileId) => request(`/api/analytics/${profileId}`);
 
 // Training
 export const getTrainingState = (profileId) =>

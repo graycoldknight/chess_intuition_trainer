@@ -198,6 +198,13 @@ function Dashboard() {
         >
           🏆 Leaderboard
         </button>
+        <button
+          data-testid="analytics-btn"
+          onClick={() => navigate(`/analytics/${pid}`)}
+          style={{ ...btnStyle, flex: 1, background: '#1e1e2e', border: '1px solid #333', fontSize: '0.9rem' }}
+        >
+          📊 Analytics
+        </button>
       </div>
       {pid === 3 && (
         <button
