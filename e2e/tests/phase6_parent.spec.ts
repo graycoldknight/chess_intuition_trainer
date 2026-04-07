@@ -21,17 +21,19 @@ test.describe('Phase 6: Parent Panel', () => {
     await expect(page).toHaveURL(/\/parent/);
   });
 
-  test('ParentPanel renders with 3 tabs', async ({ page }) => {
+  test('ParentPanel renders with 4 tabs including Live', async ({ page }) => {
     await page.goto(`${BASE}/parent`);
     await expect(page.locator('[data-testid="parent-panel"]')).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('[data-testid="tab-live"]')).toBeVisible();
     await expect(page.locator('[data-testid="tab-chapters"]')).toBeVisible();
     await expect(page.locator('[data-testid="tab-puzzle-review"]')).toBeVisible();
     await expect(page.locator('[data-testid="tab-graduations"]')).toBeVisible();
   });
 
-  test('Chapters tab is active by default and lists chapters', async ({ page }) => {
+  test('Chapters tab lists chapters when clicked', async ({ page }) => {
     await page.goto(`${BASE}/parent`);
     await expect(page.locator('[data-testid="parent-panel"]')).toBeVisible({ timeout: 10000 });
+    await page.locator('[data-testid="tab-chapters"]').click();
     await expect(page.locator('[data-testid="chapters-tab"]')).toBeVisible();
     // Wait for data to load -- chapter titles populated after API call resolves
     await expect(page.locator('text=Forks and Double Attacks')).toBeVisible({ timeout: 8000 });
@@ -40,6 +42,7 @@ test.describe('Phase 6: Parent Panel', () => {
 
   test('Chapters tab shows extraction status badges for each chapter', async ({ page }) => {
     await page.goto(`${BASE}/parent`);
+    await page.locator('[data-testid="tab-chapters"]').click();
     await expect(page.locator('[data-testid="chapters-tab"]')).toBeVisible({ timeout: 10000 });
     // Wait for data to load (badges appear after chapters API resolves)
     const badges = page.locator('[data-testid^="status-badge-"]');
@@ -50,6 +53,7 @@ test.describe('Phase 6: Parent Panel', () => {
 
   test('Chapters tab shows 22 rows (one per chapter)', async ({ page }) => {
     await page.goto(`${BASE}/parent`);
+    await page.locator('[data-testid="tab-chapters"]').click();
     await expect(page.locator('[data-testid="chapters-tab"]')).toBeVisible({ timeout: 10000 });
     const badges = page.locator('[data-testid^="status-badge-"]');
     // Wait for data to load (badges only render after API call)

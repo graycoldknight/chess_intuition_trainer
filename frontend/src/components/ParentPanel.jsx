@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Chessboard } from 'react-chessboard';
 import * as api from '../services/api';
 
 const STATUS_COLOR = {
@@ -221,6 +222,7 @@ function GraduationsTab({ graduations, onApprove }) {
 }
 
 const TABS = [
+  { key: 'live', label: 'Live', testId: 'tab-live' },
   { key: 'chapters', label: 'Chapters', testId: 'tab-chapters' },
   { key: 'puzzle-review', label: 'Puzzle Review', testId: 'tab-puzzle-review' },
   { key: 'graduations', label: 'Graduations', testId: 'tab-graduations' },
@@ -228,10 +230,13 @@ const TABS = [
 
 function ParentPanel() {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('chapters');
+  const [activeTab, setActiveTab] = useState('live');
   const [chapters, setChapters] = useState([]);
   const [graduations, setGraduations] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [activity, setActivity] = useState(null);
+  const [liveError, setLiveError] = useState(null);
+  const pollRef = useRef(null);
 
   useEffect(() => {
     Promise.all([api.getChapters(), api.getPendingGraduations()])
@@ -242,6 +247,20 @@ function ParentPanel() {
       .catch(console.error)
       .finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => {
+    if (activeTab !== 'live') {
+      clearInterval(pollRef.current);
+      return;
+    }
+    const fetchActivity = () =>
+      api.getParentActivity()
+        .then(setActivity)
+        .catch(() => setLiveError('Could not reach server'));
+    fetchActivity();
+    pollRef.current = setInterval(fetchActivity, 3000);
+    return () => clearInterval(pollRef.current);
+  }, [activeTab]);
 
   function handleApprove(batchId) {
     api.approveGraduation(batchId).then((result) => {
@@ -308,6 +327,93 @@ function ParentPanel() {
       </div>
 
       {/* Tab content */}
+      {activeTab === 'live' && (
+        <div>
+          <div style={{ color: '#666', fontSize: '0.75rem', marginBottom: 12 }}>
+            Auto-refreshes every 3 seconds
+          </div>
+          {liveError && <div style={{ color: '#ef4444', marginBottom: 12 }}>{liveError}</div>}
+          {!activity && !liveError && <div>Loading...</div>}
+          {activity?.children.map(child => (
+            <div key={child.profile_id} style={{
+              background: '#1e1e2e', borderRadius: 10, padding: 16, marginBottom: 16,
+              border: '1px solid #333',
+            }}>
+              {/* Header */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                <div>
+                  <span style={{ fontWeight: 700, fontSize: '1.1rem' }}>{child.name}</span>
+                  <span style={{ color: '#a78bfa', marginLeft: 10 }}>⚡ {child.total_xp} XP</span>
+                  {child.current_streak > 0 && (
+                    <span style={{ color: '#f59e0b', marginLeft: 8 }}>🔥 {child.current_streak}d</span>
+                  )}
+                </div>
+                {child.session ? (
+                  <span style={{ color: '#4ade80', fontSize: '0.8rem' }}>● Training now</span>
+                ) : (
+                  <span style={{ color: '#555', fontSize: '0.8rem' }}>○ Not active</span>
+                )}
+              </div>
+
+              {/* Session stats */}
+              {child.session && (
+                <div style={{ display: 'flex', gap: 20, marginBottom: 12, fontSize: '0.85rem', color: '#aaa' }}>
+                  <span>Attempted: <b style={{ color: '#fff' }}>{child.session.puzzles_attempted}</b></span>
+                  <span>Correct: <b style={{ color: '#4ade80' }}>{child.session.puzzles_correct}</b></span>
+                  {child.training.current_circle && (
+                    <span>Circle: <b style={{ color: '#a78bfa' }}>{child.training.current_circle}</b></span>
+                  )}
+                </div>
+              )}
+
+              {/* Current puzzle board */}
+              {child.current_puzzle && (
+                <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start', marginBottom: 12 }}>
+                  <div>
+                    <div style={{ color: '#666', fontSize: '0.7rem', marginBottom: 4 }}>
+                      Current puzzle — Ch. {child.training.chapter_id} #{child.current_puzzle.puzzle_number}
+                    </div>
+                    <Chessboard
+                      position={child.current_puzzle.fen}
+                      boardOrientation={child.current_puzzle.turn === 'w' ? 'white' : 'black'}
+                      arePiecesDraggable={false}
+                      boardWidth={160}
+                    />
+                  </div>
+
+                  {/* Recent attempts feed */}
+                  <div style={{ flex: 1 }}>
+                    <div style={{ color: '#666', fontSize: '0.7rem', marginBottom: 6 }}>Recent attempts</div>
+                    <div style={{ maxHeight: 168, overflowY: 'auto' }}>
+                      {child.recent_attempts.length === 0 && (
+                        <div style={{ color: '#555', fontSize: '0.8rem' }}>No attempts yet</div>
+                      )}
+                      {child.recent_attempts.map((a, i) => (
+                        <div key={i} style={{
+                          display: 'flex', gap: 8, alignItems: 'center',
+                          padding: '3px 0', borderBottom: '1px solid #2a2a3a',
+                          fontSize: '0.8rem',
+                        }}>
+                          <span style={{ color: a.success ? '#4ade80' : '#ef4444' }}>{a.success ? '✓' : '✗'}</span>
+                          <span style={{ color: '#888' }}>#{a.puzzle_number}</span>
+                          <span style={{ color: '#666', fontSize: '0.72rem' }}>
+                            {(a.time_taken_ms / 1000).toFixed(1)}s
+                          </span>
+                          <span style={{ color: '#555', fontSize: '0.7rem' }}>C{a.circle}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {!child.current_puzzle && !child.session && (
+                <div style={{ color: '#555', fontSize: '0.85rem' }}>Not currently training</div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
       {activeTab === 'chapters' && <ChaptersTab chapters={chapters} />}
       {activeTab === 'puzzle-review' && <PuzzleReviewTab />}
       {activeTab === 'graduations' && (

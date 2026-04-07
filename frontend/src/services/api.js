@@ -51,6 +51,7 @@ export const approveGraduation = (batchId) =>
   request(`/api/training/approve-graduation/${batchId}`, { method: 'POST' });
 export const getUnverifiedPuzzles = (chapterId) =>
   request(`/api/puzzles/unverified/${chapterId}`);
+export const getParentActivity = () => request('/api/parent/activity');
 
 // Puzzle browsing (test profile 99)
 export const getPuzzleById = (puzzleId) =>
