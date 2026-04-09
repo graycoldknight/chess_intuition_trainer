@@ -1,0 +1,19 @@
+Here is the Gemini CLI planning prompt translated perfectly into the **Context, Source, Goal, Expectation** framework. 
+
+***
+
+**Context:** We are building a multi-modal diagram-to-FEN extraction data pipeline for a chess app called `chess intuition trainer`. The pipeline must accurately extract FEN strings and PGN tactical sequences from digitized chess books with zero tolerance for hallucinations. We are using the `google-generativeai` Python SDK with the Gemini 1.5 Pro model to process the visual and textual data simultaneously.
+
+**Source:** The pipeline will ingest three specific file types using the Gemini File API:
+1. Raw PDF chapters containing the visual chess puzzle diagrams.
+2. Raw PDF chapters containing the printed text answer keys.
+3. A `training_edge_cases.txt` file containing verified few-shot examples to ground the model on OCR ambiguities and printed typos.
+
+**Goal:** Act as an Expert Python Data Engineer and Solutions Architect. Scaffold the complete Python project. The primary extraction script must orchestrate the Gemini File API and implement a two-step "Self-Reflective Chain of Thought" prompting strategy (Step 1: Error Anticipation to predict OCR/typo issues, Step 2: Final extraction of FEN string | Corrected PGN). You must also create a secondary, decoupled validation script using `python-chess` and `Stockfish` to deterministically test if the generated FENs are mathematically legal and if the PGN moves can be executed on that board.
+
+**Expectation:** Please output the response with the following specific deliverables:
+1. A clear, logical folder structure for the project.
+2. A complete `requirements.txt` file.
+3. The primary Python orchestration script (`extractor.py`).
+4. The deterministic validation script (`validator.py`).
+5. Step-by-step terminal instructions on how to set up the virtual environment, install dependencies, and run the pipeline.
