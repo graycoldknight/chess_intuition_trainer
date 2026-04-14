@@ -10,12 +10,14 @@ Key operations:
 - get_training_state: full snapshot for the UI
 """
 
+import random
 from datetime import datetime, timedelta
 from sqlalchemy.orm import Session as DBSession
 from models import Batch, Attempt, Session, PuzzleMastery, Puzzle, Profile
 
 SESSION_CAP_SECONDS = 60 * 60  # 60 minutes
 GRADUATION_AVG_MS = 15_000      # 15 seconds
+RANDOMIZED_FROM_CIRCLE = 6      # circles 6+ use independently shuffled puzzle order
 
 
 # ---------------------------------------------------------------------------
@@ -64,10 +66,7 @@ def approve_graduation(batch_id: int, db: DBSession) -> Batch:
 
 def get_next_puzzle(profile_id: int, db: DBSession):
     """Return the next puzzle to solve, or None if session cap hit or circle done."""
-    # Session cap check
     session = _get_active_session(profile_id, db)
-    if session and _is_over_cap(session):
-        return None
 
     # Active batch
     batch = (
@@ -78,7 +77,7 @@ def get_next_puzzle(profile_id: int, db: DBSession):
     if not batch:
         return None
 
-    # Find first puzzle in batch.puzzle_ids not yet attempted in current circle
+    # Find first puzzle not yet attempted in current circle
     attempted_ids = {
         a.puzzle_id
         for a in db.query(Attempt).filter(
@@ -88,7 +87,11 @@ def get_next_puzzle(profile_id: int, db: DBSession):
         ).all()
     }
 
-    for puzzle_id in batch.puzzle_ids:
+    # Use pre-generated shuffled order for circles >= RANDOMIZED_FROM_CIRCLE
+    orders = batch.circle_puzzle_orders or {}
+    puzzle_order = orders.get(str(batch.current_circle), batch.puzzle_ids)
+
+    for puzzle_id in puzzle_order:
         if puzzle_id not in attempted_ids:
             return db.query(Puzzle).get(puzzle_id)
 
@@ -243,9 +246,13 @@ def get_training_state(profile_id: int, db: DBSession) -> dict:
         elapsed = (datetime.utcnow() - session.started_at).total_seconds()
         session_time_remaining = max(0.0, SESSION_CAP_SECONDS - elapsed)
 
+    profile = db.query(Profile).get(profile_id)
+    profile_xp = profile.total_xp or 0 if profile else 0
+
     if not batch:
         return {
             "has_active_batch": False,
+            "total_xp": profile_xp,
             "session": _session_dict(session),
             "session_time_remaining_seconds": session_time_remaining,
         }
@@ -260,10 +267,19 @@ def get_training_state(profile_id: int, db: DBSession) -> dict:
         ).all()
         if attempts:
             correct = [a for a in attempts if a.success == 1]
+            times = sorted(a.time_taken_ms for a in correct)
+            n = len(times)
+            if n:
+                avg = int(sum(times) / n)
+                mid = n // 2
+                median = int(times[mid] if n % 2 else (times[mid - 1] + times[mid]) / 2)
+            else:
+                avg = median = None
             circle_stats[circle] = {
                 "total": len(attempts),
-                "correct": len(correct),
-                "avg_time_ms": int(sum(a.time_taken_ms for a in correct) / len(correct)) if correct else None,
+                "correct": n,
+                "avg_time_ms": avg,
+                "median_time_ms": median,
             }
 
     return {
@@ -274,8 +290,11 @@ def get_training_state(profile_id: int, db: DBSession) -> dict:
         "total_puzzles": batch.total_puzzles,
         "status": batch.status,
         "circle_stats": circle_stats,
+        "total_xp": profile_xp,
         "session": _session_dict(session),
         "session_time_remaining_seconds": session_time_remaining,
+        "puzzle_ids": batch.puzzle_ids,
+        "is_randomized_circle": batch.current_circle >= RANDOMIZED_FROM_CIRCLE,
     }
 
 
@@ -298,7 +317,7 @@ def _is_over_cap(session: Session) -> bool:
 
 
 def _maybe_advance_circle(batch: Batch, profile_id: int, db: DBSession):
-    """Advance current_circle if all puzzles have been attempted; check graduation on circle 5+."""
+    """Advance current_circle if all puzzles have been attempted; check graduation on circle 7+."""
     attempted_count = db.query(Attempt).filter(
         Attempt.profile_id == profile_id,
         Attempt.batch_id == batch.id,
@@ -308,7 +327,7 @@ def _maybe_advance_circle(batch: Batch, profile_id: int, db: DBSession):
     if attempted_count < batch.total_puzzles:
         return  # Circle not yet complete
 
-    if batch.current_circle >= 5:
+    if batch.current_circle >= 7:
         # Check graduation: avg correct time on this circle
         correct_attempts = db.query(Attempt).filter(
             Attempt.profile_id == profile_id,
@@ -325,11 +344,24 @@ def _maybe_advance_circle(batch: Batch, profile_id: int, db: DBSession):
         if avg_ms < GRADUATION_AVG_MS:
             batch.status = "ready_to_graduate"
         else:
-            batch.current_circle += 1  # Allow extra circles
+            # Allow extra circles; generate new shuffle
+            batch.current_circle += 1
+            _store_shuffle(batch)
     else:
         batch.current_circle += 1
+        if batch.current_circle >= RANDOMIZED_FROM_CIRCLE:
+            _store_shuffle(batch)
 
     db.commit()
+
+
+def _store_shuffle(batch: Batch):
+    """Generate and store a fresh shuffle for the new current_circle."""
+    shuffled = list(batch.puzzle_ids)
+    random.shuffle(shuffled)
+    orders = dict(batch.circle_puzzle_orders or {})
+    orders[str(batch.current_circle)] = shuffled
+    batch.circle_puzzle_orders = orders
 
 
 def _session_dict(session) -> dict | None:

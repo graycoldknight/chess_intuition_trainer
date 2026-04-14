@@ -1,0 +1,35 @@
+Phase 2 — PDF Extraction Pipeline
+
+Context:
+We are implementing Phase 2 of the Chess Intuition Trainer, a web application for developing rapid tactical pattern recognition in children (ages 7-9). The primary task is to build a robust data extraction pipeline for Chapters 2 through 22 of Susan Polgar’s "Chess Tactics for Champions". This phase is critical because accurate FEN and multi-move solution extraction is the foundation for the entire training loop. We must extract both the visual board state and the corresponding multi-move UCI solutions from separate sections of the PDF.
+
+Source:
+1. Source Material: Digitized chapters (2–22) from Polgar's "Chess Tactics for Champions".
+2. Visuals: PDF diagrams of tactical puzzles.
+3. Solutions: Printed text answer keys in the same PDF (often in a different section).
+4. Edge Cases: A training_edge_cases.txt file containing few-shot examples of ambiguous diagrams (e.g., partial pieces) or OCR typos in solutions.
+5. Tooling: google-generativeai, PyMuPDF (fitz) for image conversion, python-chess for validation, and asyncio/tenacity for rate-limit management.
+
+Goal:
+Act as a Senior Python Data Engineer. Implement a production-grade extraction and validation pipeline.
+1. Extraction Orchestrator (extractor.py): 
+   - Convert PDF pages to images using PyMuPDF.
+   - Use a "Self-Reflective Chain of Thought" strategy:
+     - Step 1 (Vision): Identify piece placement, side to move, and textual cues.
+     - Step 2 (Solution Mapping): Locate and parse the multi-move solution.
+     - Step 3 (Refinement): Compare board state vs. solution feasibility to catch OCR hallucinations or printed errors.
+   - Use Gemini 2.0 Flash as the primary model, but implement a fallback to Gemini 1.5 Pro for puzzles that repeatedly fail validation.
+   - Enforce strict JSON extraction using the SDK's `response_schema` feature.
+2. Deterministic Validator (validator.py):
+   - Use python-chess to verify FEN legality (e.g., kings present, no pawns on back rank).
+   - Simulate the PGN/UCI solution sequence on the FEN to ensure all moves are legal.
+   - Integrate Stockfish to flag positions where the "solution" is not the clear best move or leads to a different evaluation than expected.
+3. Data Storage: Output structured JSON/SQL matching the puzzles and chapters schema defined in the PRD (FastAPI/SQLAlchemy compatible).
+
+Expectation:
+Follow the standards defined in the project's plan_template.md. Provide:
+1. Implementation Files: extractor.py, validator.py, and models.py (SQLAlchemy/Pydantic models).
+2. Testing (RED/GREEN): A pytest suite in tests/test_extraction.py that verifies the pipeline against the training_edge_cases.txt.
+3. Showboat Script: A verification/phase2_extraction.md file containing automated verification steps to confirm that 100% of extracted FENs are mathematically valid.
+4. Project Scaffolding: A requirements.txt and a README.md with explicit setup instructions for a virtual environment and Stockfish integration.
+5. Architectural Decision: Briefly explain your choice of image resolution, prompting temperature, and how you architected the async rate-limit handling.

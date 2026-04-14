@@ -693,7 +693,9 @@ showboat verify verification/phase7_polish.md
 │   ├── test_training_api.py     # Phase 3
 │   ├── test_dashboard_api.py    # Phase 4
 │   ├── test_gamification.py     # Phase 5
-│   └── test_parent_api.py       # Phase 6
+│   ├── test_parent_api.py       # Phase 6
+│   ├── test_multimove.py        # Phase 9
+│   └── test_multimove_api.py    # Phase 9
 ├── frontend/src/__tests__/
 │   ├── TrainingSession.test.jsx # Phase 3
 │   ├── Dashboard.test.jsx       # Phase 4
@@ -702,7 +704,8 @@ showboat verify verification/phase7_polish.md
 │   ├── Leaderboard.test.jsx     # Phase 5
 │   ├── ParentPanel.test.jsx     # Phase 6
 │   ├── Animations.test.jsx      # Phase 7
-│   └── SessionResume.test.jsx   # Phase 7
+│   ├── SessionResume.test.jsx   # Phase 7
+│   └── MultiMove.test.jsx      # Phase 9
 ├── verification/                    # Showboat executable docs
 │   ├── phase1_foundation.md
 │   ├── phase2_extraction.md
@@ -710,7 +713,8 @@ showboat verify verification/phase7_polish.md
 │   ├── phase4_dashboard.md
 │   ├── phase5_gamification.md
 │   ├── phase6_parent.md
-│   └── phase7_polish.md
+│   ├── phase7_polish.md
+│   └── phase9_multimove.md
 └── e2e/
     ├── playwright.config.ts     # Base URL, browser config, screenshot dir
     └── tests/
@@ -718,7 +722,8 @@ showboat verify verification/phase7_polish.md
         ├── phase4_dashboard.spec.ts
         ├── phase5_gamification.spec.ts
         ├── phase6_parent.spec.ts
-        └── phase7_polish.spec.ts
+        ├── phase7_polish.spec.ts
+        └── phase9_multimove.spec.ts
 ```
 
 ### Running Tests
@@ -738,6 +743,126 @@ cd e2e && npx playwright test
 # All four layers
 cd backend && pytest -v && cd ../frontend && npm test && cd .. && for f in verification/phase*.md; do showboat verify "$f"; done && cd e2e && npx playwright test
 ```
+
+### Phase 8: Manual Validation with Playwright UI
+
+Full end-to-end manual validation of all 7 phases using a throwaway Test profile (ID 99) that never touches Rishi or Raghav's data.
+
+**Run:**
+```bash
+# Both servers must be running first:
+cd backend && uvicorn main:app --port 8000
+cd frontend && npm run dev
+
+# Then launch Playwright in UI mode (watch tests run in a live browser):
+cd e2e && npx playwright test tests/manual_validation.spec.ts --ui
+```
+
+**What you see:** A Chromium window with Playwright's UI. Expand `manual_validation.spec.ts` in the left panel to see all phase groups. Click the play button on any group to watch it execute in the browser preview on the right.
+
+**Test file:** `e2e/tests/manual_validation.spec.ts`
+Covers all 7 phases in order:
+- Phase 1 — Profile Select (navigation, Raj → Parent Panel, back-navigate)
+- Phase 2 — Chapter Extraction (22 chapters, status badges, puzzle review tab)
+- Phase 3 — Core Training Loop (board renders, stopwatch ticking, wrong move no crash, back button)
+- Phase 4 — Session Timer & Dashboard (timer counting down, chapter progress, results screen)
+- Phase 5 — Gamification (XP visible, badge gallery 33 badges, leaderboard leader highlights)
+- Phase 6 — Parent Panel Graduations (empty state, approve API)
+- Phase 7 — Confetti, XP Popup, Session Resume, Responsive layout (390px mobile, 768px tablet)
+- Full E2E walk-through with 7 screenshots saved to `test-results/`
+
+**Test profile setup/teardown:**
+Global setup runs automatically before tests; teardown runs when you close the UI.
+The setup uses `backend/test_setup.py` (Python/SQLAlchemy) — NOT raw sqlite3 CLI inserts.
+
+> **Critical:** SQLite WAL isolation means sqlite3 CLI inserts are NOT visible to the
+> SQLAlchemy connection pool used by the FastAPI backend. Always use `test_setup.py`
+> (which goes through the same ORM) for any DB seeding in tests.
+
+**Support files:**
+```
+e2e/
+├── playwright.config.ts          # globalSetup/globalTeardown wired in; testIgnore for setup/
+├── setup/
+│   ├── global-setup.ts           # Calls: python3 backend/test_setup.py create
+│   └── global-teardown.ts        # Calls: python3 backend/test_setup.py destroy
+└── tests/
+    └── manual_validation.spec.ts # All 7 phases, Test profile ID 99
+backend/
+└── test_setup.py                 # Creates/destroys Test profile via SQLAlchemy ORM
+```
+
+**Known gotchas fixed during setup:**
+1. **`global-setup.ts` appearing in test list** — fixed with `testIgnore: ['**/setup/**']` in config and moving setup files into `e2e/setup/`
+2. **`create-batch` API returning 500** — root cause: sqlite3 CLI inserts not visible to SQLAlchemy pool (WAL isolation). Fixed by replacing all API calls in globalSetup with a Python script (`test_setup.py`) that uses the same ORM session as the backend
+3. **ProfileSelect is hardcoded** — `ProfileSelect.jsx` only shows Rishi, Raghav, Raj. Test profile accessed via direct URL `/dashboard/99`, not by clicking a card
+4. **back-navigate test** — `page.goto(url)` creates a single-entry history; `goBack()` fails. Fixed by navigating to `/` first, then clicking through to the dashboard before calling `goBack()`
+5. **Status badge assertion** — Chapter 1 `extraction_status` is `"review"` not `"verified"`. Assertion uses `/pending|extracting|review|verified/i` to match any valid status
+
+### Phase 9: Multi-Move Puzzle Sequences
+
+Currently the training session validates only the **first move** of each puzzle and immediately advances — but Polgar's solutions are multi-move sequences (e.g., "1. Rf6+ Kg7 2. Rb6"). Phase 9 makes the user play **every move in the solution** (both sides) before the puzzle advances.
+
+**Decisions:**
+- User plays all moves (both sides) — no auto-play of opponent moves
+- Wrong move mid-sequence → mark as incorrect, auto-advance to next puzzle
+- Timer covers the entire sequence (stops only when last move played)
+- Solution data sourced by parsing answer text via Gemini + python-chess validation → stored as `solution_uci_line` in DB
+
+**Critical Finding:** `solution_line` is empty for all existing puzzles in the DB. The raw answer text lives in `chapter1_answers.txt` (project root). Must import and parse this text.
+
+**RED -- write tests first:**
+- `backend/tests/test_multimove.py`:
+  - Test `parse_solution_to_uci(fen, solution_text)` returns correct UCI list for known puzzle (e.g., puzzle 1: "1. Rf6+ Kg7 2. Rb6" → `["f3f6", "h6g7", "f6b6"]`)
+  - Test returns `None` for unparseable text
+  - Test returns `None` when SAN move is illegal in position
+  - Test handles promotion moves (e.g., puzzle 34: "1. f8=Q+")
+  - Test single-move solution returns list with one element
+- `backend/tests/test_multimove_api.py`:
+  - Test `POST /api/chapters/{id}/import-answers` populates `solution_line` + `solution_uci_line`
+  - Test import returns summary with success/failure counts
+  - Test `GET /api/training/next-puzzle/{id}` includes `solution_uci_line` field
+  - Test `solution_uci_line` falls back to `[solution_uci]` when column is null
+  - Test import is idempotent
+- `frontend/src/__tests__/MultiMove.test.jsx`:
+  - Test correct first move does NOT trigger `solveStatus='correct'` — board updates, timer keeps running
+  - Test correct last move triggers `solveStatus='correct'` and records attempt as success
+  - Test wrong move at any index triggers `solveStatus='wrong'`, shows red arrow for expected move
+  - Test move progress indicator appears after first correct intermediate move ("Move 2 of 3")
+  - Test progress indicator hidden for single-move puzzles
+  - Test single-move puzzles still work identically (backward compat)
+
+**GREEN -- implement:**
+- `backend/models.py`: Add `solution_uci_line = Column(JSON, nullable=True)` to Puzzle
+- `backend/main.py`: Startup `ALTER TABLE` migration guard; new `POST /api/chapters/{chapter_id}/import-answers` endpoint; add `solution_uci_line` to next-puzzle response (falls back to `[solution_uci]`)
+- `backend/extraction.py`: New `parse_solution_to_uci(fen, solution_text)` — Gemini extracts SAN move list from prose, python-chess validates against FEN and converts to UCI
+- `frontend/src/components/TrainingSession.jsx`: Add `moveIndex` + `solutionMoves` state; revised `handlePieceDrop` checks `solutionMoves[moveIndex]` — intermediate correct: apply move + increment index + keep timer; final correct: stop timer + record success + advance; wrong at any index: stop timer + record failure + advance. Progress indicator below stopwatch.
+- `backend/test_setup.py`: Seed puzzles with `solution_uci_line` populated for Test profile
+
+**SHOWBOAT -- `verification/phase9_multimove.md`:**
+```
+showboat init verification/phase9_multimove.md "Phase 9: Multi-Move Puzzle Sequences Verification"
+showboat note verification/phase9_multimove.md "Verify multi-move parsing, import, and training flow."
+showboat exec verification/phase9_multimove.md bash "cd backend && pytest tests/test_multimove.py tests/test_multimove_api.py -v"
+showboat note verification/phase9_multimove.md "Import chapter 1 answers and verify solution_uci_line populated."
+showboat exec verification/phase9_multimove.md bash "curl -s -X POST http://localhost:8000/api/chapters/1/import-answers -H 'Content-Type: application/json' -d @chapter1_answers.txt | python -m json.tool"
+showboat note verification/phase9_multimove.md "Verify solution_uci_line stored for first 5 puzzles."
+showboat exec verification/phase9_multimove.md bash "cd backend && python -c \"from database import SessionLocal; from models import Puzzle; db=SessionLocal(); [print(f'  #{p.puzzle_number}: {p.solution_uci_line}') for p in db.query(Puzzle).filter(Puzzle.chapter_id==1).order_by(Puzzle.puzzle_number).limit(5)]\""
+showboat note verification/phase9_multimove.md "Verify next-puzzle API returns solution_uci_line."
+showboat exec verification/phase9_multimove.md bash "curl -s http://localhost:8000/api/training/next-puzzle/99 | python -m json.tool"
+showboat note verification/phase9_multimove.md "Verify frontend unit tests pass."
+showboat exec verification/phase9_multimove.md bash "cd frontend && npm test -- --run"
+showboat verify verification/phase9_multimove.md
+```
+
+**PLAYWRIGHT -- `e2e/tests/phase9_multimove.spec.ts`:**
+- Navigate to Test profile training session — verify chessboard renders
+- Identify a multi-move puzzle (solution_uci_line.length > 1)
+- Play correct first move — verify: board updates, timer still running, no "Correct!" yet, progress indicator appears
+- Play correct final move — verify: "Correct!" feedback, XP popup, auto-advance
+- On another puzzle: correct first move then wrong second move — verify: "Wrong" feedback, red arrow on expected move, auto-advance
+- Single-move puzzle: correct move → same behavior as before
+- Screenshots at key steps: mid-sequence, progress indicator, final correct, mid-sequence wrong
 
 ---
 

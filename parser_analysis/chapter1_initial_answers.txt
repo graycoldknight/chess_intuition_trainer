@@ -1,0 +1,50 @@
+1. 1. Rf6+ (intermediate move) Kg7 2. Rb6 forks both Black bishops.
+2. The first step is to chase the Black knight away from c6 with 1. d5 Ne5 and then fork with 2. Qa4+.
+3. Look for the unprotected piece on c5! 1. Bxe6 fxe6 2. Qh5+.
+4. It would be a blunder to grab the hanging rook, as White's back rank is weak. The right answer is: 1. Qxc7+ Kxc7 2. Nd5+.
+5. Here White needs to find a pretty queen sacrifice: 1. Qxe7! Rxe7 2. Nf6+. It is also important to see that after 1.... Qd4+ White saves the queen, by blocking the check with 2. Qe3.
+6. Here the d-pawn is the hero! 1. d4 Ng6 2. d5.
+7. White wins a rook with 1. Qd6+ Qxd6 2. exd6+.
+8. By trading rooks with 1. Rxd8 Qxd8, White forces the Black queen to leave the seventh rank. Then 2. Qb7+ forks.
+9. White wins a rook with 1. Qxf6! gxf6 2. Nf7+.
+10. With a smart decoy, 1. Qe8+ Kh7, White forces the Black king into a fork with 2. Qe4+.
+11. After the obvious-looking 1. Qd7 Black is okay after 1... Rg8. The right answer is: 1. Bxg7+! Kxg7 2. Qd7+.
+12. White's knight on d4 is under attack and Black is even threatening checkmate in one. White can solve all those problems and even win an exchange. 1. Nf5+! gxf5 2. Qg5+.
+13. White sacrifices the queen to remove the guard of the e6 pawn. 1. Qxf7+! Rxf7 2. Nxe6+.
+14. White could win the exchange back by capturing on f7 right away. But with a nice queen sacrifice in the corner, 1. Qh8+! Kxh8 2. Nxf7+, White wins a whole rook.
+15. Here White combines a checkmate threat with attacking Black's bishop. 1. Qd3 Rad8 (1. ... g6 2. Qxd6) 2. Qh7+ Kf8 3. Qh8#.
+16. White trades with 1. Bxd7 Qxd7, and now that the bishop on c5 is unprotected the fork is played: 2. Qc4+. On the other the immediate 1. Qe4+ is not sufficient, because of 1... Be6.
+17. White could give a knight fork if Black's knight were not protecting the c7 pawn. Therefore, White trades with 1. Bxa6 bxa6 and then 2. Nxc7+.
+18. In this example, White needs to remove the guard of the crucial d5 square. It can be accomplished by 1. e5 Ne8 and now White wins the rook in the corner with 2. Qd5+.
+19. Here White uses the decoy method by sacrificing a rook: 1. Rd8+!, forcing the Black queen to be the victim of a fork: 1.... Qxd8 2. Nf7+.
+20. White wins at least a piece with 1. Rxc6! bxc6 2. Qxc6+ and then takes the unprotected rook on a8.
+21. Black would be doing okay if the rook were not on b8, an unprotected square. With a smart exchange sacrifice, White gains a material advantage. 1. Rxf6! gxf6 2. Qg3+. The immediate 1. Qg3 is not so successful because of 1... Rb6.
+22. With a simple trade White removes the guard of the d5 pawn (the black knight): 1. Bxf6 Qxf6 and then 2. Qxd5+ forks.
+23. Again Black has a problem with the rook on an unsafe square. After a decoy check, 1. Qc4+, the Black king is forced to step on the h-file: 1... Kh8 and then 2. Qh4+ wins.
+24. In this position White uses a pin to decoy the Black king into a fork: 1. Nb6+ Kb8 2. Nd7+.
+25. Black seems to do fine, except for having the rook on an unprotected square. All of a sudden, the White queen swings over to the other side of the board: 1. Qh8+ Kg7 2. Qb2+.
+26. White would have some advantage after 1. Ne6 Qg8 2. Rd8+, but White should not settle for that. With the right move White forces the Black king into a fork: 1. Rd8+! Kxd8 2. Ne6+.
+27. This idea is a famous opening trap employed in many similar positions. After a harmless-looking trade with 1. Bxf6 Bxf6 White creates a double threat with: 2. Qe4 g6 (2... Rb8 3. Qxh7#) 3. Qxa8 winning a rook.
+28. In this position material is balanced, but White can force a trade that will result in a fork to win a rook: 1. Qb6+ Qxb6 2. cxb6+.
+29. Here Black, with a tricky move, creates a double threat by playing: 1.... Qc3 (with the main idea of 2.... Qe1#) 2. Qd1 Qc5+ forks.
+30. With a temporary queen sacrifice White wins material. 1. Ng6! Qxf5 (after 1.... Rd7 2. Ne7+ White gains even more) 2. Nxe7+.
+31. White sacrifices a knight to win back more material: 1. Nxg6+! hxg6 2. Qh4+ Kg8 3. Rxe7.
+32. White disconnects Black's king and rook with 1. Qg5+ Kh8 and now 2. Qh6 wins with dual checkmate threats on f8 and h7.
+33. In this example, two of Black's pieces are on unprotected squares. After the intermediate check 1. Qd8+ Nf8 White forks by 2. Qa5.
+34. White's f7 pawn seems to be falling. For example, 1. Bxd6 Ra2+, followed by 2... Kxf7. However, the f7 pawn can be used in a very beneficial way: 1. f8=Q+! Kxf8 and now 2. Bxd6+.
+35. As in the previous example, here too White needs to promote the pawn by 1. g8=Q+! Kxg8 and then 2. Nf6+.
+36. Black has a way to sacrifice the queen and get two rooks and a knight in exchange: 1.... Qxc3! 2. Rxc3 Nxd1 3. Qd2 Nxc3.
+37. Here White needs to trade first, followed by a decoy combination. 1. Bxg7 Qxg7 2. Qxe6! Qxe5 3. Nf7+, winning a piece.
+38. Amazingly, White here is able to force the Black king to either g8 or h7, where it can be forked: 1. Rh8+ Kg7 2. Rg8+! (this is the key move!) 2.... Kxg8 3. Nf6+.
+39. After a simple check, by sacrificing the bishop Black forces the White king into a fork: 1.... Nc3+ 2. Ka1 Bb2+! 3. Kxb2 Nd1+.
+40. Here Black simplifies the position by a double sacrifice: 1... Qxf4! 2. Qxf4 Rg1+! 3. Kxg1 Nxe2+.
+41. First a decoy, then a queen sac and finally the fork: 1. Qh4+ Kg7 2. Qxd8! Qxd8 3. Ne6+.
+42. 1. Nc7+ is an obvious fork idea, but for now the Black queen is stopping it. White has an unexpected way to make this idea work, however: 1. Qd4 Qxd4 2. cxd4 Nc6 3. Nc7+.
+43. Again the knight is the hero! 1. Nf6+ Kg7 2. Qxf8+! Kxf8 3. Nxh7+
+44. 1. Rxa7 Rxa7 2. Rxd4! exd4 3. Bxd4+. Now Black is almost saved with 3.... Rg7, but 4. h6 wins by using the pin.
+45. Pawns can fork too! 1. g6+ Kg8 2. Bc4+ Kh8 3. g7+.
+46. This is one of the prettiest forking ideas I know. After a queen sacrifice White uses an underpromotion! 1. Rc8+ Rxc8 2. Qxa7+! Kxa7 3. bxc8=N+!.
+47. As in the previous diagram, a queen sacrifice and a knight promotion! 1. Qe8+ Kf6 2. Qxe6+! Kxe6 3. d8=N+!.
+48. A fun example of a decoy to achieve a fork. 1. d5+! Kxd5 2. c4+! Kxc4 3. Nd2+.
+49. Black has a cute way to win a piece: 1... Bxc3 2. bxc3 Nd5 3. Qxc4 Nxe3+.
+50. By giving two simple checks Black forces the White king into a fork: 1.... Re1+ 2. Kg2 R8e2+ 3. Kf3 Re3+.

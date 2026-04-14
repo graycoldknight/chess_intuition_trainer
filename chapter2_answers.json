@@ -1,0 +1,324 @@
+[
+  {
+    "puzzle_number": 1,
+    "solution_san": "Rd5",
+    "solution_uci": "",
+    "solution_uci_line": null,
+    "solution_line": "1. Rd5 Qxh2 2. Rh5"
+  },
+  {
+    "puzzle_number": 2,
+    "solution_san": "Ng5",
+    "solution_uci": "",
+    "solution_uci_line": null,
+    "solution_line": "1. Ng5 Qe7 2. Bxf7+"
+  },
+  {
+    "puzzle_number": 3,
+    "solution_san": "Bxf3",
+    "solution_uci": "",
+    "solution_uci_line": null,
+    "solution_line": "1... Bxf3 2. gxf3 Qg5+"
+  },
+  {
+    "puzzle_number": 4,
+    "solution_san": "Qxd5",
+    "solution_uci": "b7d5",
+    "solution_uci_line": null,
+    "solution_line": "1... Qxd5 2. exd5 Bxf6"
+  },
+  {
+    "puzzle_number": 5,
+    "solution_san": "Rd8+",
+    "solution_uci": "d4d8",
+    "solution_uci_line": null,
+    "solution_line": "1. Rd8+ Rxd8 2. Qxd8#"
+  },
+  {
+    "puzzle_number": 6,
+    "solution_san": "Qxa7",
+    "solution_uci": "",
+    "solution_uci_line": null,
+    "solution_line": "1. Qxa7 Nb4 2. Qa4+"
+  },
+  {
+    "puzzle_number": 7,
+    "solution_san": "Rg7+",
+    "solution_uci": "",
+    "solution_uci_line": null,
+    "solution_line": "1. Rg7+ Kxg7 2. Qh6+ Kxh6 3. Bf4#"
+  },
+  {
+    "puzzle_number": 8,
+    "solution_san": "Rf8+",
+    "solution_uci": "",
+    "solution_uci_line": null,
+    "solution_line": "1. Rf8+ Kxf8 2. Qh6+"
+  },
+  {
+    "puzzle_number": 9,
+    "solution_san": "Qh7+",
+    "solution_uci": "",
+    "solution_uci_line": null,
+    "solution_line": "1. Qh7+ Kxh7 2. Ng5+"
+  },
+  {
+    "puzzle_number": 10,
+    "solution_san": "Ba2+",
+    "solution_uci": "",
+    "solution_uci_line": null,
+    "solution_line": "1. Ba2+ Kh7 2. Rh6#"
+  },
+  {
+    "puzzle_number": 11,
+    "solution_san": "Rd3",
+    "solution_uci": "",
+    "solution_uci_line": null,
+    "solution_line": "1. Rd3 Nxd3 2. Ra8+"
+  },
+  {
+    "puzzle_number": 12,
+    "solution_san": "Re4",
+    "solution_uci": "d4e4",
+    "solution_uci_line": null,
+    "solution_line": "1. Re4 Qa2+ 2. Kf3"
+  },
+  {
+    "puzzle_number": 13,
+    "solution_san": "Bxc4",
+    "solution_uci": "",
+    "solution_uci_line": null,
+    "solution_line": "1. Bxc4 bxc4 2. Rd7"
+  },
+  {
+    "puzzle_number": 14,
+    "solution_san": "Rb1+",
+    "solution_uci": "a1b1",
+    "solution_uci_line": null,
+    "solution_line": "1. Rb1+ Kg3 2. Rb3+"
+  },
+  {
+    "puzzle_number": 15,
+    "solution_san": "Rg3",
+    "solution_uci": "",
+    "solution_uci_line": null,
+    "solution_line": "1. Rg3 Rxe3 2. Rxe3 Rxe3 3. Re1"
+  },
+  {
+    "puzzle_number": 16,
+    "solution_san": "Nf5+",
+    "solution_uci": "",
+    "solution_uci_line": null,
+    "solution_line": "1. Nf5+ Bxf5 2. Qxd7+"
+  },
+  {
+    "puzzle_number": 17,
+    "solution_san": "Rc1+",
+    "solution_uci": "",
+    "solution_uci_line": null,
+    "solution_line": "1. Rc1+ bxc1=Q+ 2. Bxc1"
+  },
+  {
+    "puzzle_number": 19,
+    "solution_san": "Ra1+",
+    "solution_uci": "",
+    "solution_uci_line": null,
+    "solution_line": "1. Ra1+ Rb1 2. Rxb1+ Kxb1 3. Ba3"
+  },
+  {
+    "puzzle_number": 20,
+    "solution_san": "Rxc6",
+    "solution_uci": "",
+    "solution_uci_line": null,
+    "solution_line": "1. Rxc6! bxc6 2. Qxc6+"
+  },
+  {
+    "puzzle_number": 21,
+    "solution_san": "Rxf6",
+    "solution_uci": "",
+    "solution_uci_line": null,
+    "solution_line": "1. Rxf6! gxf6 2. Qg3+"
+  },
+  {
+    "puzzle_number": 22,
+    "solution_san": "Bxf6",
+    "solution_uci": "",
+    "solution_uci_line": null,
+    "solution_line": "1. Bxf6 Qxf6 2. Qxd5+"
+  },
+  {
+    "puzzle_number": 23,
+    "solution_san": "Qc4+",
+    "solution_uci": "",
+    "solution_uci_line": null,
+    "solution_line": "1. Qc4+ Kh8 2. Qh4+"
+  },
+  {
+    "puzzle_number": 24,
+    "solution_san": "Nb6+",
+    "solution_uci": "",
+    "solution_uci_line": null,
+    "solution_line": "1. Nb6+ Kb8 2. Nd7+"
+  },
+  {
+    "puzzle_number": 25,
+    "solution_san": "Qb8+",
+    "solution_uci": "b1b8",
+    "solution_uci_line": null,
+    "solution_line": "1. Qb8+ Kg7 2. Qb2+"
+  },
+  {
+    "puzzle_number": 26,
+    "solution_san": "Rd8+",
+    "solution_uci": "",
+    "solution_uci_line": null,
+    "solution_line": "1. Rd8+! Kxd8 2. Ne6+"
+  },
+  {
+    "puzzle_number": 27,
+    "solution_san": "Bxf6",
+    "solution_uci": "",
+    "solution_uci_line": null,
+    "solution_line": "1. Bxf6 Bxf6 2. Qe4 g6 3. Qxa8"
+  },
+  {
+    "puzzle_number": 28,
+    "solution_san": "Qb6+",
+    "solution_uci": "",
+    "solution_uci_line": null,
+    "solution_line": "1. Qb6+ Qxb6 2. cxb6+"
+  },
+  {
+    "puzzle_number": 29,
+    "solution_san": "Qc3",
+    "solution_uci": "c5c3",
+    "solution_uci_line": null,
+    "solution_line": "1.... Qc3 2. Qd1 Qc5+"
+  },
+  {
+    "puzzle_number": 30,
+    "solution_san": "Ng6!",
+    "solution_uci": "",
+    "solution_uci_line": null,
+    "solution_line": "1. Ng6! Qxf5 2. Nxe7+"
+  },
+  {
+    "puzzle_number": 31,
+    "solution_san": "Nxg6+",
+    "solution_uci": "",
+    "solution_uci_line": null,
+    "solution_line": "1. Nxg6+! hxg6 2. Qh4+ Kg8 3. Rxe7"
+  },
+  {
+    "puzzle_number": 32,
+    "solution_san": "Qg5+",
+    "solution_uci": "",
+    "solution_uci_line": null,
+    "solution_line": "1. Qg5+ Kh8 2. Qh6"
+  },
+  {
+    "puzzle_number": 33,
+    "solution_san": "Qd8+",
+    "solution_uci": "a5d8",
+    "solution_uci_line": null,
+    "solution_line": "1. Qd8+ Nf8 2. Qa5"
+  },
+  {
+    "puzzle_number": 34,
+    "solution_san": "f8=Q+",
+    "solution_uci": "",
+    "solution_uci_line": null,
+    "solution_line": "1. f8Q+ Kxf8 2. Bxd6+"
+  },
+  {
+    "puzzle_number": 38,
+    "solution_san": "Rb8+",
+    "solution_uci": "",
+    "solution_uci_line": null,
+    "solution_line": "1. Rb8+ Kg7 2. Rg8+ Kxg8 3. Nf6+"
+  },
+  {
+    "puzzle_number": 39,
+    "solution_san": "Nc3+",
+    "solution_uci": "a4c3",
+    "solution_uci_line": null,
+    "solution_line": "1... Nc3+ 2. Ka1 Bb2+ 3. Kxb2 Nd1+"
+  },
+  {
+    "puzzle_number": 40,
+    "solution_san": "Qxf4",
+    "solution_uci": "g4f4",
+    "solution_uci_line": null,
+    "solution_line": "1... Qxf4! 2. Qxf4 Rg1+ 3. Kxg1 Nxe2+"
+  },
+  {
+    "puzzle_number": 41,
+    "solution_san": "Qh4+",
+    "solution_uci": "",
+    "solution_uci_line": null,
+    "solution_line": "1. Qh4+ Kg7 2. Qxd8! Qxd8 3. Ne6+"
+  },
+  {
+    "puzzle_number": 42,
+    "solution_san": "Nc7+",
+    "solution_uci": "b5c7",
+    "solution_uci_line": null,
+    "solution_line": "1. Qd4 Qxd4 2. cxd4 Nc6 3. Nc7+"
+  },
+  {
+    "puzzle_number": 43,
+    "solution_san": "Nf6+",
+    "solution_uci": "d5f6",
+    "solution_uci_line": null,
+    "solution_line": "1. Nf6+ Kg7 2. Qxf8+! Kxf8 3. Nxh7+"
+  },
+  {
+    "puzzle_number": 44,
+    "solution_san": "Rxa7",
+    "solution_uci": "a3a7",
+    "solution_uci_line": null,
+    "solution_line": "1. Rxa7 Rxa7 2. Rxd4! exd4 3. Bxd4+"
+  },
+  {
+    "puzzle_number": 45,
+    "solution_san": "g6+",
+    "solution_uci": "g5g6",
+    "solution_uci_line": null,
+    "solution_line": "1. g6+ Kg8 2. Bc4+ Kh8 3. g7+"
+  },
+  {
+    "puzzle_number": 46,
+    "solution_san": "Rc8+",
+    "solution_uci": "c2c8",
+    "solution_uci_line": null,
+    "solution_line": "1. Rc8+ Rxc8 2. Qxa7+! Kxa7 3. bxc8N+"
+  },
+  {
+    "puzzle_number": 47,
+    "solution_san": "Qe8+",
+    "solution_uci": "",
+    "solution_uci_line": null,
+    "solution_line": "1. Qe8+ Kf6 2. Qxe6+! Kxe6 3. d8N+"
+  },
+  {
+    "puzzle_number": 48,
+    "solution_san": "d5+",
+    "solution_uci": "d4d5",
+    "solution_uci_line": null,
+    "solution_line": "1. d5+ Kxd5 2. c4+! Kxc4 3. Nd2+"
+  },
+  {
+    "puzzle_number": 49,
+    "solution_san": "Bxc3",
+    "solution_uci": "b4c3",
+    "solution_uci_line": null,
+    "solution_line": "1... Bxc3 2. bxc3 Nd5! 3. Qxc4 Nxe3+"
+  },
+  {
+    "puzzle_number": 50,
+    "solution_san": "Re1+",
+    "solution_uci": "e7e1",
+    "solution_uci_line": null,
+    "solution_line": "1... Re1+ 2. Kg2 R8e2+ 3. Kf3 Re3+"
+  }
+]

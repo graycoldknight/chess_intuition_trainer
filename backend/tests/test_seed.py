@@ -30,12 +30,12 @@ def test_chapter_page_ranges_valid(seeded_db):
 
 
 def test_seed_creates_3_profiles(seeded_db):
-    """3 profiles: Rishi (student), Raghav (student), Raj (parent)."""
+    """4 profiles: Rishi (student), Raghav (student), Raj (parent), Guest (student)."""
     profiles = seeded_db.query(Profile).all()
-    assert len(profiles) == 3
+    assert len(profiles) == 4
 
     names = {p.name for p in profiles}
-    assert names == {"Rishi", "Raghav", "Raj"}
+    assert names == {"Rishi", "Raghav", "Raj", "Guest"}
 
     rishi = seeded_db.query(Profile).filter_by(name="Rishi").first()
     assert rishi.role == "student"
@@ -64,5 +64,5 @@ def test_seed_is_idempotent(seeded_db):
     """Running seed twice doesn't create duplicates."""
     from seed import seed_all
     seed_all(seeded_db)
-    assert seeded_db.query(Profile).count() == 3
+    assert seeded_db.query(Profile).count() == 4
     assert seeded_db.query(Chapter).count() == 22

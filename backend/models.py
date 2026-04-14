@@ -51,9 +51,11 @@ class Puzzle(Base):
     solution_san = Column(String, nullable=False)
     solution_uci = Column(String, nullable=False)
     solution_line = Column(Text)
+    solution_uci_line = Column(JSON, nullable=True)  # e.g. ["f3f6","h6g7","f6b6"]
     pdf_page = Column(Integer)
     verified = Column(Integer, default=0)  # 0=unverified, 1=parent-approved
     extraction_confidence = Column(Float, default=0.0)
+    error_message = Column(Text)
 
     chapter = relationship("Chapter", back_populates="puzzles")
 
@@ -72,6 +74,7 @@ class Batch(Base):
     total_puzzles = Column(Integer, nullable=False)
     current_circle = Column(Integer, default=1)
     status = Column(String, default="active")  # active/ready_to_graduate/graduated
+    circle_puzzle_orders = Column(JSON, nullable=True)  # str(circle) → [puzzle_id, ...] for circles >= 6
 
     profile = relationship("Profile")
     chapter = relationship("Chapter")

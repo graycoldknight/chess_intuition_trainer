@@ -1,11 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
 
 /**
- * Millisecond-precision stopwatch for puzzle solving.
- * Starts when active=true, stops and resets when active=false.
- * Calls onStop(elapsedMs) when active transitions from true to false.
+ * Stopwatch for puzzle solving.
+ * tickMs controls how often the display refreshes (coarser = less pressure).
+ *   Circle 1 → 30 000 ms  (jumps every 30 s)
+ *   Circle 2 → 15 000 ms  (jumps every 15 s)
+ *   Circle 3 →  1 000 ms  (jumps every 1 s)
+ *   Circle 4+ →    50 ms  (smooth ms display)
+ * Calls onStop(elapsedMs) with true elapsed time when active → false.
  */
-function Stopwatch({ active, onStop, style }) {
+function Stopwatch({ active, onStop, tickMs = 50, style }) {
   const [elapsedMs, setElapsedMs] = useState(0);
   const startRef = useRef(null);
   const intervalRef = useRef(null);
@@ -16,7 +20,7 @@ function Stopwatch({ active, onStop, style }) {
       setElapsedMs(0);
       intervalRef.current = setInterval(() => {
         setElapsedMs(Date.now() - startRef.current);
-      }, 50);
+      }, tickMs);
     } else {
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
@@ -30,9 +34,13 @@ function Stopwatch({ active, onStop, style }) {
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, [active]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [active, tickMs]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const formatMs = (ms) => {
+    if (tickMs >= 1000) {
+      // Coarse ticks — show whole seconds only
+      return `${Math.floor(ms / 1000)}s`;
+    }
     const s = Math.floor(ms / 1000);
     const frac = Math.floor((ms % 1000) / 10);
     return `${s}.${String(frac).padStart(2, '0')}s`;

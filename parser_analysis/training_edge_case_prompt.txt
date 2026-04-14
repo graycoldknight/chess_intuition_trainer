@@ -1,0 +1,2 @@
+refer to @final_prompt.txt lets come up with a plan using @plan_template.md for the generation of training_edge_cases.txt. the *.json has the 100% validated correct positions and answers. the
+   @chapter1_initial_q.txt and @chapter1_initial_answers.txt has the initial output from gemini pro when i uplodaded the pdf of puzzle positons and answers. any questions?

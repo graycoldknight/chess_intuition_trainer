@@ -1,0 +1,597 @@
+[
+  {
+    "puzzle_number": 1,
+    "solution_san": "Rf6+",
+    "solution_uci": "f3f6",
+    "solution_uci_line": ["f3f6", "h6g7", "f6b6"],
+    "solution_line": "1. Rf6+ (intermediate move) Kg7 2. Rb6 forks both Black bishops."
+  },
+  {
+    "puzzle_number": 2,
+    "solution_san": "d5",
+    "solution_uci": "d4d5",
+    "solution_uci_line": [
+      "d4d5",
+      "c6e5",
+      "d1a4"
+    ],
+    "solution_line": "The first step is to chase the Black knight away from c6 with 1. d5 Ne5 and then fork with 2. Qa4+."
+  },
+  {
+    "puzzle_number": 3,
+    "solution_san": "Bxe6",
+    "solution_uci": "c4e6",
+    "solution_uci_line": [
+      "c4e6",
+      "f7e6",
+      "d1h5"
+    ],
+    "solution_line": "Look for the unprotected piece on c5! 1. Bxe6 fxe6 2. Qh5+."
+  },
+  {
+    "puzzle_number": 4,
+    "solution_san": "Qxf6",
+    "solution_uci": "e5f6",
+    "solution_uci_line": [
+      "e5c7",
+      "b8c7",
+      "e3d5"
+    ],
+    "solution_line": "It would be a blunder to grab the hanging rook, as White's back rank is weak. The right answer is: 1. Qxc7+ Kxc7 2. Nd5+."
+  },
+  {
+    "puzzle_number": 5,
+    "solution_san": "Qxe7",
+    "solution_uci": "e2e7",
+    "solution_uci_line": [
+      "e2e7",
+      "f7e7",
+      "g4f6"
+    ],
+    "solution_line": "Here White needs to find a pretty queen sacrifice: 1. Qxe7! Rxe7 2. Nf6+. It is also important to see that after 1.... Qd4+ White saves the queen, by blocking the check with 2. Qe3."
+  },
+  {
+    "puzzle_number": 6,
+    "solution_san": "d4",
+    "solution_uci": "d3d4",
+    "solution_uci_line": [
+      "d3d4",
+      "e5g6",
+      "d4d5"
+    ],
+    "solution_line": "Here the d-pawn is the hero! 1. d4 Ng6 2. d5."
+  },
+  {
+    "puzzle_number": 7,
+    "solution_san": "Qd8+",
+    "solution_uci": "d4d8",
+    "solution_uci_line": [
+      "d4d6",
+      "h6d6",
+      "e5d6"
+    ],
+    "solution_line": "White wins a rook with 1. Qd6+ Qxd6 2. exd6+."
+  },
+  {
+    "puzzle_number": 8,
+    "solution_san": "Rxd8",
+    "solution_uci": "d1d8",
+    "solution_uci_line": [
+      "d1d8",
+      "e7d8",
+      "f3b7"
+    ],
+    "solution_line": "By trading rooks with 1. Rxd8 Qxd8, White forces the Black queen to leave the seventh rank. Then 2. Qb7+ forks."
+  },
+  {
+    "puzzle_number": 9,
+    "solution_san": "Qxb7",
+    "solution_uci": "f7b7",
+    "solution_uci_line": [
+      "f7f6",
+      "g7f6",
+      "e5f7"
+    ],
+    "solution_line": "White wins a rook with 1. Qxf6! gxf6 2. Nf7+."
+  },
+  {
+    "puzzle_number": 10,
+    "solution_san": "h3",
+    "solution_uci": "h2h3",
+    "solution_uci_line": [
+      "h5e8",
+      "g8h7",
+      "e8e4"
+    ],
+    "solution_line": "With a smart decoy, 1. Qe8+ Kh7, White forces the Black king into a fork with 2. Qe4+."
+  },
+  {
+    "puzzle_number": 11,
+    "solution_san": "Bxg7+",
+    "solution_uci": "c3g7",
+    "solution_uci_line": [
+      "c3g7",
+      "h8g7",
+      "d5d7"
+    ],
+    "solution_line": "After the obvious-looking 1. Qd7 Black is okay after 1... Rg8. The right answer is: 1. Bxg7+! Kxg7 2. Qd7+."
+  },
+  {
+    "puzzle_number": 12,
+    "solution_san": "Nf3",
+    "solution_uci": "d4f3",
+    "solution_uci_line": [
+      "d4f5",
+      "g6f5",
+      "d2g5"
+    ],
+    "solution_line": "White's knight on d4 is under attack and Black is even threatening checkmate in one. White can solve all those problems and even win an exchange. 1. Nf5+! gxf5 2. Qg5+."
+  },
+  {
+    "puzzle_number": 13,
+    "solution_san": "Qxf7+",
+    "solution_uci": "f4f7",
+    "solution_uci_line": [
+      "f4f7",
+      "f8f7",
+      "g5e6"
+    ],
+    "solution_line": "White sacrifices the queen to remove the guard of the e6 pawn. 1. Qxf7+! Rxf7 2. Nxe6+."
+  },
+  {
+    "puzzle_number": 14,
+    "solution_san": "Qh8+",
+    "solution_uci": "a8h8",
+    "solution_uci_line": [
+      "a8h8",
+      "g7h8",
+      "g5f7"
+    ],
+    "solution_line": "White could win the exchange back by capturing on f7 right away. But with a nice queen sacrifice in the corner, 1. Qh8+! Kxh8 2. Nxf7+, White wins a whole rook."
+  },
+  {
+    "puzzle_number": 15,
+    "solution_san": "Qd3",
+    "solution_uci": "e2d3",
+    "solution_uci_line": [
+      "e2d3",
+      "a8d8",
+      "d3h7",
+      "g8f8",
+      "h7h8"
+    ],
+    "solution_line": "Here White combines a checkmate threat with attacking Black's bishop. 1. Qd3 Rad8 (1. ... g6 2. Qxd6) 2. Qh7+ Kf8 3. Qh8#."
+  },
+  {
+    "puzzle_number": 16,
+    "solution_san": "Bf2",
+    "solution_uci": "g3f2",
+    "solution_uci_line": [
+      "b5d7",
+      "e7d7",
+      "e2c4"
+    ],
+    "solution_line": "White trades with 1. Bxd7 Qxd7, and now that the bishop on c5 is unprotected the fork is played: 2. Qc4+. On the other the immediate 1. Qe4+ is not sufficient, because of 1... Be6."
+  },
+  {
+    "puzzle_number": 17,
+    "solution_san": "Bxa6",
+    "solution_uci": "e2a6",
+    "solution_uci_line": [
+      "e2a6",
+      "b7a6",
+      "e6c7"
+    ],
+    "solution_line": "White could give a knight fork if Black's knight were not protecting the c7 pawn. Therefore, White trades with 1. Bxa6 bxa6 and then 2. Nxc7+."
+  },
+  {
+    "puzzle_number": 18,
+    "solution_san": "fxe4",
+    "solution_uci": "f3e4",
+    "solution_uci_line": [
+      "e4e5",
+      "f6e8",
+      "d2d5"
+    ],
+    "solution_line": "In this example, White needs to remove the guard of the crucial d5 square. It can be accomplished by 1. e5 Ne8 and now White wins the rook in the corner with 2. Qd5+."
+  },
+  {
+    "puzzle_number": 19,
+    "solution_san": "Rd8+",
+    "solution_uci": "d1d8",
+    "solution_uci_line": [
+      "d1d8",
+      "f6d8",
+      "e5f7"
+    ],
+    "solution_line": "Here White uses the decoy method by sacrificing a rook: 1. Rd8+!, forcing the Black queen to be the victim of a fork: 1.... Qxd8 2. Nf7+."
+  },
+  {
+    "puzzle_number": 20,
+    "solution_san": "Rxc6",
+    "solution_uci": "c1c6",
+    "solution_uci_line": [
+      "c1c6",
+      "b7c6",
+      "f3c6"
+    ],
+    "solution_line": "White wins at least a piece with 1. Rxc6! bxc6 2. Qxc6+ and then takes the unprotected rook on a8."
+  },
+  {
+    "puzzle_number": 21,
+    "solution_san": "g3",
+    "solution_uci": "g2g3",
+    "solution_uci_line": [
+      "f1f6",
+      "g7f6",
+      "d3g3"
+    ],
+    "solution_line": "Black would be doing okay if the rook were not on b8, an unprotected square. With a smart exchange sacrifice, White gains a material advantage. 1. Rxf6! gxf6 2. Qg3+. The immediate 1. Qg3 is not so successful because of 1... Rb6."
+  },
+  {
+    "puzzle_number": 22,
+    "solution_san": "Bxf6",
+    "solution_uci": "c3f6",
+    "solution_uci_line": [
+      "c3f6",
+      "b6f6",
+      "f3d5"
+    ],
+    "solution_line": "With a simple trade White removes the guard of the d5 pawn (the black knight): 1. Bxf6 Qxf6 and then 2. Qxd5+ forks."
+  },
+  {
+    "puzzle_number": 23,
+    "solution_san": "Qc4+",
+    "solution_uci": "c2c4",
+    "solution_uci_line": [
+      "c2c4",
+      "g8h8",
+      "c4h4"
+    ],
+    "solution_line": "Again Black has a problem with the rook on an unsafe square. After a decoy check, 1. Qc4+, the Black king is forced to step on the h-file: 1... Kh8 and then 2. Qh4+ wins."
+  },
+  {
+    "puzzle_number": 24,
+    "solution_san": "Nb6+",
+    "solution_uci": "d5b6",
+    "solution_uci_line": [
+      "d5b6",
+      "a8b8",
+      "b6d7"
+    ],
+    "solution_line": "In this position White uses a pin to decoy the Black king into a fork: 1. Nb6+ Kb8 2. Nd7+."
+  },
+  {
+    "puzzle_number": 25,
+    "solution_san": "a5",
+    "solution_uci": "a4a5",
+    "solution_uci_line": [
+      "g3b8",
+      "h8g7",
+      "b8b2"
+    ],
+    "solution_line": "Black seems to do fine, except for having the rook on an unprotected square. All of a sudden, the White queen swings over to the other side of the board: 1. Qb8+ Kg7 2. Qb2+."
+  },
+  {
+    "puzzle_number": 26,
+    "solution_san": "Rc5+",
+    "solution_uci": "d5c5",
+    "solution_uci_line": [
+      "d5d8",
+      "c8d8",
+      "d4e6"
+    ],
+    "solution_line": null
+  },
+  {
+    "puzzle_number": 27,
+    "solution_san": "Bxf6",
+    "solution_uci": "g5f6",
+    "solution_uci_line": [
+      "g5f6",
+      "e7f6",
+      "e2e4",
+      "g7g6",
+      "e4a8"
+    ],
+    "solution_line": "This idea is a famous opening trap employed in many similar positions. After a harmless-looking trade with 1. Bxf6 Bxf6 White creates a double threat with: 2. Qe4 g6 (2... Rb8 3. Qxh7#) 3. Qxa8 winning a rook."
+  },
+  {
+    "puzzle_number": 28,
+    "solution_san": "Qxa6",
+    "solution_uci": "a5a6",
+    "solution_uci_line": [
+      "a5b6",
+      "a6b6",
+      "c5b6"
+    ],
+    "solution_line": "In this position material is balanced, but White can force a trade that will result in a fork to win a rook: 1. Qb6+ Qxb6 2. cxb6+."
+  },
+  {
+    "puzzle_number": 29,
+    "solution_san": "Nxa4",
+    "solution_uci": "b6a4",
+    "solution_uci_line": [
+      "e5c3",
+      "a4d1",
+      "c3c5"
+    ],
+    "solution_line": "Here Black, with a tricky move, creates a double threat by playing: 1.... Qc3 (with the main idea of 2.... Qe1#) 2. Qd1 Qc5+ forks."
+  },
+  {
+    "puzzle_number": 30,
+    "solution_san": "Ng6",
+    "solution_uci": "e5g6",
+    "solution_uci_line": [
+      "e5g6",
+      "d5f5",
+      "g6e7"
+    ],
+    "solution_line": "With a temporary queen sacrifice White wins material. 1. Ng6! Qxf5 (after 1.... Rd7 2. Ne7+ White gains even more) 2. Nxe7+."
+  },
+  {
+    "puzzle_number": 31,
+    "solution_san": "Rf8+",
+    "solution_uci": "f7f8",
+    "solution_uci_line": [
+      "e5g6",
+      "h7g6",
+      "f4h4",
+      "h8g8",
+      "f7e7"
+    ],
+    "solution_line": "White sacrifices a knight to win back more material: 1. Nxg6+! hxg6 2. Qh4+ Kg8 3. Rxe7."
+  },
+  {
+    "puzzle_number": 32,
+    "solution_san": "Qg5+",
+    "solution_uci": "f6g5",
+    "solution_uci_line": [
+      "f6g5",
+      "g8h8",
+      "g5h6"
+    ],
+    "solution_line": "White disconnects Black's king and rook with 1. Qg5+ Kh8 and now 2. Qh6 wins with dual checkmate threats on f8 and h7."
+  },
+  {
+    "puzzle_number": 33,
+    "solution_san": "Qd8+",
+    "solution_uci": "d3d8",
+    "solution_uci_line": [
+      "d3d8",
+      "h7f8",
+      "d8a5"
+    ],
+    "solution_line": "In this example, two of Black's pieces are on unprotected squares. After the intermediate check 1. Qd8+ Nf8 White forks by 2. Qa5."
+  },
+  {
+    "puzzle_number": 34,
+    "solution_san": "f8=Q+",
+    "solution_uci": "f7f8q",
+    "solution_uci_line": [
+      "f7f8q",
+      "g7f8",
+      "f4d6"
+    ],
+    "solution_line": "White's f7 pawn seems to be falling. For example, 1. Bxd6 Ra2+, followed by 2... Kxf7. However, the f7 pawn can be used in a very beneficial way: 1. f8=Q+! Kxf8 and now 2. Bxd6+."
+  },
+  {
+    "puzzle_number": 35,
+    "solution_san": "g8=Q+",
+    "solution_uci": "g7g8q",
+    "solution_uci_line": [
+      "g7g8q",
+      "f7g8",
+      "e4f6"
+    ],
+    "solution_line": "As in the previous example, here too White needs to promote the pawn by 1. g8=Q+! Kxg8 and then 2. Nf6+."
+  },
+  {
+    "puzzle_number": 36,
+    "solution_san": "Qxe4",
+    "solution_uci": "d4e4",
+    "solution_uci_line": [
+      "d4c3",
+      "c1c3",
+      "e3d1",
+      "f2d2",
+      "d1c3"
+    ],
+    "solution_line": "Black has a way to sacrifice the queen and get two rooks and a knight in exchange: 1.... Qxc3! 2. Rxc3 Nxd1 3. Qd2 Nxc3."
+  },
+  {
+    "puzzle_number": 37,
+    "solution_san": "Nxb7+",
+    "solution_uci": "d6b7",
+    "solution_uci_line": [
+      "h6g7",
+      "c7g7",
+      "g3e5",
+      "g7e5",
+      "d6f7"
+    ],
+    "solution_line": "Here White needs to trade first, followed by a decoy combination. 1. Bxg7 Qxg7 2. Qxe5! Qxe5 3. Nf7+, winning a piece."
+  },
+  {
+    "puzzle_number": 38,
+    "solution_san": "Rb8+",
+    "solution_uci": "b1b8",
+    "solution_uci_line": [
+      "b1b8",
+      "h8g7",
+      "b8g8",
+      "g7g8",
+      "g4f6"
+    ],
+    "solution_line": "Amazingly, White here is able to force the Black king to either g8 or h7, where it can be forked: 1. Rb8+ Kg7 2. Rg8+! (this is the key move!) 2.... Kxg8 3. Nf6+."
+  },
+  {
+    "puzzle_number": 39,
+    "solution_san": "Nd2+",
+    "solution_uci": "e4d2",
+    "solution_uci_line": [
+      "e4c3",
+      "b1a1",
+      "a3b2",
+      "a1b2",
+      "c3d1"
+    ],
+    "solution_line": "After a simple check, by sacrificing the bishop Black forces the White king into a fork: 1.... Nc3+ 2. Ka1 Bb2+! 3. Kxb2 Nd1+."
+  },
+  {
+    "puzzle_number": 40,
+    "solution_san": "cxd4",
+    "solution_uci": "c5d4",
+    "solution_uci_line": [
+      "h4f4",
+      "f1f4",
+      "g5g1",
+      "h1g1",
+      "d4e2"
+    ],
+    "solution_line": "Here Black simplifies the position by a double sacrifice: 1... Qxf4! 2. Qxf4 Rg1+! 3. Kxg1 Nxe2+."
+  },
+  {
+    "puzzle_number": 41,
+    "solution_san": "Qh4+",
+    "solution_uci": "f6h4",
+    "solution_uci_line": [
+      "f6h4",
+      "h6g7",
+      "h4d8",
+      "d6d8",
+      "f4e6"
+    ],
+    "solution_line": "First a decoy, then a queen sac and finally the fork: 1. Qh4+ Kg7 2. Qxd8! Qxd8 3. Ne6+."
+  },
+  {
+    "puzzle_number": 42,
+    "solution_san": "Qd4",
+    "solution_uci": "d1d4",
+    "solution_uci_line": [
+      "d1d4",
+      "c5d4",
+      "c3d4",
+      "e5c6",
+      "b5c7"
+    ],
+    "solution_line": "1. Nc7+ is an obvious fork idea, but for now the Black queen is stopping it. White has an unexpected way to make this idea work, however: 1. Qd4 Qxd4 2. cxd4 Nc6 3. Nc7+."
+  },
+  {
+    "puzzle_number": 43,
+    "solution_san": "Nf6+",
+    "solution_uci": "d5f6",
+    "solution_uci_line": [
+      "d5f6",
+      "g8g7",
+      "d6f8",
+      "g7f8",
+      "f6h7"
+    ],
+    "solution_line": "Again the knight is the hero! 1. Nf6+ Kg7 2. Qxf8+! Kxf8 3. Nxh7+"
+  },
+  {
+    "puzzle_number": 44,
+    "solution_san": "Rxa7",
+    "solution_uci": "a3a7",
+    "solution_uci_line": [
+      "a3a7",
+      "a8a7",
+      "d1d4",
+      "e5d4",
+      "e3d4",
+      "a7g7",
+      "h5h6"
+    ],
+    "solution_line": "1. Rxa7 Rxa7 2. Rxd4! exd4 3. Bxd4+. Now Black is almost saved with 3.... Rg7, but 4. h6 wins by using the pin."
+  },
+  {
+    "puzzle_number": 45,
+    "solution_san": "Rc7+",
+    "solution_uci": "c2c7",
+    "solution_uci_line": [
+      "g5g6",
+      "h7g8",
+      "e2c4",
+      "g8h8",
+      "g6g7",
+      "h8g7",
+      "e5d7"
+    ],
+    "solution_line": "Pawns can fork too! 1. g6+ Kg8 2. Bc4+ Kh8 3. g7+."
+  },
+  {
+    "puzzle_number": 46,
+    "solution_san": "Rc8+",
+    "solution_uci": "c2c8",
+    "solution_uci_line": [
+      "c2c8",
+      "d8c8",
+      "a5a7",
+      "b8a7",
+      "b7c8n"
+    ],
+    "solution_line": "This is one of the prettiest forking ideas I know. After a queen sacrifice White uses an underpromotion! 1. Rc8+ Rxc8 2. Qxa7+! Kxa7 3. bxc8=N+!."
+  },
+  {
+    "puzzle_number": 47,
+    "solution_san": "Qe8+",
+    "solution_uci": "h8e8",
+    "solution_uci_line": [
+      "h8e8",
+      "f7f6",
+      "e8e6",
+      "f6e6",
+      "d7d8n"
+    ],
+    "solution_line": "As in the previous diagram, a queen sacrifice and a knight promotion! 1. Qe8+ Kf6 2. Qxe6+! Kxe6 3. d8=N+!."
+  },
+  {
+    "puzzle_number": 48,
+    "solution_san": "d5+",
+    "solution_uci": "d4d5",
+    "solution_uci_line": [
+      "d4d5",
+      "e6d5",
+      "c3c4",
+      "d5c4",
+      "f1d2"
+    ],
+    "solution_line": "A fun example of a decoy to achieve a fork. 1. d5+! Kxd5 2. c4+! Kxc4 3. Nd2+."
+  },
+  {
+    "puzzle_number": 49,
+    "solution_san": "Bxc3",
+    "solution_uci": "g7c3",
+    "solution_uci_line": [
+      "g7c3",
+      "b2c3",
+      "b4d5",
+      "a4c4",
+      "d5e3"
+    ],
+    "solution_line": "Black has a cute way to win a piece: 1... Bxc3 2. bxc3 Nd5 3. Qxc4 Nxe3+."
+  },
+  {
+    "puzzle_number": 50,
+    "solution_san": "Rg7+",
+    "solution_uci": "e7g7",
+    "solution_uci_line": [
+      "e7e1",
+      "g1g2",
+      "e8e2",
+      "g2f3",
+      "e2e3"
+    ],
+    "solution_line": "By giving two simple checks Black forces the White king into a fork: 1.... Re1+ 2. Kg2 R8e2+ 3. Kf3 Re3+."
+  },
+  {
+    "puzzle_number": 9999,
+    "solution_san": "Rb8#",
+    "solution_uci": "b4b8",
+    "solution_uci_line": [
+      "b4b8"
+    ],
+    "solution_line": "1. Rb8#"
+  }
+]

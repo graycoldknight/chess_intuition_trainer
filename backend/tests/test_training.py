@@ -309,16 +309,16 @@ def test_graduation_ready_when_avg_time_under_15s(seeded_db):
     puzzles = make_puzzles(db, count=2)
     batch = training.create_batch(profile_id=1, chapter_id=1, db=db)
 
-    # Complete circles 1-4
-    for circle in range(1, 5):
+    # Complete circles 1-6
+    for circle in range(1, 7):
         db.refresh(batch)
         record_all_puzzles_in_circle(db, batch, profile_id=1, circle=circle)
 
     db.refresh(batch)
-    assert batch.current_circle == 5
+    assert batch.current_circle == 7
 
-    # Complete circle 5 with fast times (avg < 15s = 15000ms)
-    record_all_puzzles_in_circle(db, batch, profile_id=1, circle=5, time_ms=8000)
+    # Complete circle 7 with fast times (avg < 15s = 15000ms)
+    record_all_puzzles_in_circle(db, batch, profile_id=1, circle=7, time_ms=8000)
 
     db.refresh(batch)
     assert batch.status == "ready_to_graduate"
@@ -371,25 +371,6 @@ def test_start_session_creates_record(seeded_db):
     assert session.ended_at is None
 
 
-def test_get_next_puzzle_returns_none_after_60_min(seeded_db):
-    db = seeded_db
-    puzzles = make_puzzles(db, count=2)
-    training.create_batch(profile_id=1, chapter_id=1, db=db)
-
-    # Create a session that started 61 minutes ago
-    old_session = Session(
-        profile_id=1,
-        started_at=datetime.utcnow() - timedelta(minutes=61),
-        puzzles_attempted=0,
-        puzzles_correct=0,
-        xp_earned=0,
-    )
-    db.add(old_session)
-    db.commit()
-
-    puzzle = training.get_next_puzzle(profile_id=1, db=db)
-    assert puzzle is None
-
 
 def test_get_next_puzzle_works_within_60_min(seeded_db):
     db = seeded_db
@@ -434,3 +415,120 @@ def test_get_training_state_with_active_batch(seeded_db):
     assert state["current_circle"] == 1
     assert state["total_puzzles"] == 3
     assert state["status"] == "active"
+
+
+# ---------------------------------------------------------------------------
+# Phase 10: Randomized challenge circles
+# ---------------------------------------------------------------------------
+
+def test_graduation_not_triggered_at_circle_5(seeded_db):
+    db = seeded_db
+    make_puzzles(db, count=2)
+    batch = training.create_batch(profile_id=1, chapter_id=1, db=db)
+
+    for circle in range(1, 6):
+        db.refresh(batch)
+        record_all_puzzles_in_circle(db, batch, profile_id=1, circle=circle, time_ms=8000)
+
+    db.refresh(batch)
+    assert batch.status != "ready_to_graduate"
+    assert batch.current_circle == 6
+
+
+def test_graduation_not_triggered_at_circle_6(seeded_db):
+    db = seeded_db
+    make_puzzles(db, count=2)
+    batch = training.create_batch(profile_id=1, chapter_id=1, db=db)
+
+    for circle in range(1, 7):
+        db.refresh(batch)
+        record_all_puzzles_in_circle(db, batch, profile_id=1, circle=circle, time_ms=8000)
+
+    db.refresh(batch)
+    assert batch.status != "ready_to_graduate"
+    assert batch.current_circle == 7
+
+
+def test_graduation_triggered_at_circle_7(seeded_db):
+    db = seeded_db
+    make_puzzles(db, count=2)
+    batch = training.create_batch(profile_id=1, chapter_id=1, db=db)
+
+    for circle in range(1, 8):
+        db.refresh(batch)
+        record_all_puzzles_in_circle(db, batch, profile_id=1, circle=circle, time_ms=8000)
+
+    db.refresh(batch)
+    assert batch.status == "ready_to_graduate"
+
+
+def test_circle_6_has_shuffled_order(seeded_db):
+    db = seeded_db
+    make_puzzles(db, count=5)
+    batch = training.create_batch(profile_id=1, chapter_id=1, db=db)
+
+    for circle in range(1, 6):
+        db.refresh(batch)
+        record_all_puzzles_in_circle(db, batch, profile_id=1, circle=circle, time_ms=8000)
+
+    db.refresh(batch)
+    assert batch.current_circle == 6
+    orders = batch.circle_puzzle_orders or {}
+    assert "6" in orders
+    assert set(orders["6"]) == set(batch.puzzle_ids)
+    assert len(orders["6"]) == batch.total_puzzles
+
+
+def test_circle_6_and_7_have_different_shuffles(seeded_db):
+    db = seeded_db
+    make_puzzles(db, count=10)  # 10 puzzles — P(same shuffle) = 1/10! ≈ 0
+    batch = training.create_batch(profile_id=1, chapter_id=1, db=db)
+
+    for circle in range(1, 7):
+        db.refresh(batch)
+        record_all_puzzles_in_circle(db, batch, profile_id=1, circle=circle, time_ms=8000)
+
+    db.refresh(batch)
+    orders = batch.circle_puzzle_orders or {}
+    assert "6" in orders
+    assert "7" in orders
+    assert orders["6"] != orders["7"]
+
+
+def test_get_next_puzzle_uses_shuffled_order_in_circle_6(seeded_db):
+    db = seeded_db
+    make_puzzles(db, count=5)
+    batch = training.create_batch(profile_id=1, chapter_id=1, db=db)
+
+    for circle in range(1, 6):
+        db.refresh(batch)
+        record_all_puzzles_in_circle(db, batch, profile_id=1, circle=circle, time_ms=8000)
+
+    db.refresh(batch)
+    assert batch.current_circle == 6
+
+    served_order = []
+    for _ in range(5):
+        p = training.get_next_puzzle(profile_id=1, db=db)
+        assert p is not None
+        served_order.append(p.id)
+        training.record_attempt(
+            profile_id=1, puzzle_id=p.id, batch_id=batch.id,
+            circle=6, success=True, time_taken_ms=8000, user_move="e7e5", db=db,
+        )
+        db.refresh(batch)
+
+    orders = batch.circle_puzzle_orders or {}
+    assert served_order == orders["6"]
+
+
+def test_circle_puzzle_orders_null_on_circles_1_to_5(seeded_db):
+    db = seeded_db
+    make_puzzles(db, count=2)
+    batch = training.create_batch(profile_id=1, chapter_id=1, db=db)
+
+    record_all_puzzles_in_circle(db, batch, profile_id=1, circle=1, time_ms=8000)
+    db.refresh(batch)
+
+    orders = batch.circle_puzzle_orders or {}
+    assert "1" not in orders

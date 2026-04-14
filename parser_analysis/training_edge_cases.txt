@@ -1,0 +1,53 @@
+# Chess Intuition Trainer: Extraction Edge Cases
+# This file provides few-shot examples for Gemini 2.0 Flash to improve FEN and solution extraction accuracy.
+
+---
+
+### Case 1: Edge of Board Blindness (Top/Right Borders)
+**Problem:** Pieces placed on the very edge of the diagram (Rank 8 or File H) are often omitted.
+**Example (Puzzle 7):**
+- **Image Context:** Black Rook on h8.
+- **Initial Failure:** 8/p1r1k2r/1p5q/4Pp2/1P1Q2p1/6P1/3R1PK1/5R2 w - - 0 1 (Missed h8)
+- **Correction:** 7r/p1r1k3/1p5q/4Pp2/1P1Q2p1/6P1/3R1PK1/5R2 w - - 0 1
+- **Rationale:** Always scan the extreme boundaries of the 8x8 grid. If a solution mentions a square, verify the piece exists in the FEN.
+
+---
+
+### Case 2: Piece Misidentification (Queen vs. Bishop)
+**Problem:** In low-resolution PDF scans, Bishops and Queens can look similar.
+**Example (Puzzle 17):**
+- **Image Context:** Black Bishop on f6.
+- **Initial Failure:** r3k2r/p1p3p1/n3Nq1p/4pP2/8/2P3P1/PP2B1PP/4K2R w Kkq - 0 1 (Confused f6 Bishop for Queen; missed a1 Rook)
+- **Correction:** r3k2r/ppp3p1/n3Nb1p/4pP2/8/2P3P1/PP2B1PP/R3K2R w KQkq - 0 1
+- **Rationale:** Cross-reference piece types with the solution text. "Bxa6" implies a Bishop was present or reachable.
+
+---
+
+### Case 3: Vertical Coordinate Hallucination (Rank Shift)
+**Problem:** Pieces are sometimes placed one rank too high or too low.
+**Example (Puzzle 12):**
+- **Image Context:** Black King on g7.
+- **Initial Failure:** r5k1/ppq2p1p/2n3p1/8/3N3r/8/PP1Q1PPP/5RK1 w - - 0 1 (Placed King on g8 instead of g7)
+- **Correction:** r7/ppq2pkp/2n3p1/8/3N3r/8/PP1Q1PPP/R4RK1 w - - 0 1
+- **Rationale:** Verify the number of empty squares between pieces. A "back-rank mate" threat requires specific king placement.
+
+---
+
+### Case 4: Missing Interior Pawns
+**Problem:** Small pawns in the middle of a crowded board are overlooked.
+**Example (Puzzle 4):**
+- **Image Context:** White Pawn on f3.
+- **Initial Failure:** 1k6/ppq4p/5r2/4Q3/8/4N1P1/P5PP/7K w - - 0 1 (Missed f3 pawn)
+- **Correction:** 1k6/ppq4p/5r2/4Q3/8/4NP2/P5PP/7K w - - 0 1
+- **Rationale:** Detailed scanning of the center squares is required. Pawns often provide the "anchor" for tactical combinations.
+
+---
+
+### Case 5: Disconnect Between Solution and Board State
+**Problem:** Extracting a FEN that makes the solution move illegal.
+**Example (Puzzle 9):**
+- **Image Context:** Black Rook on f6.
+- **Initial Failure:** r6k/pp3Qpp/2bqp3/4Np2/2P5/8/PP3PPP/5RK1 w - - 0 1 (Missed f6)
+- **Solution:** 1. Qxf6! gxf6 2. Nf7+
+- **Correction:** r6k/pp3Qpp/2bqpr2/4Np2/2P5/8/PP3PPP/R4RK1 w - - 0 1
+- **Rationale:** If the solution says "Qxf6", there MUST be a piece on f6 that the Queen can capture. Self-correct the FEN based on the solution move.

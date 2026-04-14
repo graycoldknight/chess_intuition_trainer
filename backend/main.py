@@ -6,21 +6,23 @@ import os
 from dotenv import load_dotenv
 load_dotenv()
 
-from fastapi import FastAPI, Depends, HTTPException, BackgroundTasks
+from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
+from datetime import datetime
 import database
 from database import get_db
 from seed import seed_all
-from models import Chapter, Puzzle, Profile
+from models import Chapter, Puzzle, Profile, Session as TrainingSession, BadgeDefinition, EarnedBadge
 import training
+import gamification
 
 app = FastAPI(title="Chess Intuition Trainer")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:3000"],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -33,6 +35,16 @@ def startup():
     db = database.SessionLocal()
     try:
         seed_all(db)
+        if not os.getenv("TESTING"):
+            from import_puzzles import import_all_available_chapters
+            import_all_available_chapters(db)
+        # Phase 9: add solution_uci_line column if missing
+        from sqlalchemy import text, inspect
+        insp = inspect(database.engine)
+        columns = [c["name"] for c in insp.get_columns("puzzles")]
+        if "solution_uci_line" not in columns:
+            db.execute(text("ALTER TABLE puzzles ADD COLUMN solution_uci_line TEXT"))
+            db.commit()
     finally:
         db.close()
 
@@ -61,34 +73,12 @@ def list_chapters(db: Session = Depends(get_db)):
     ]
 
 
-def _run_extraction(chapter_id: int):
-    """Background task: runs in a fresh DB session so it outlives the request."""
-    from extraction import extract_chapter
-    db = database.SessionLocal()
-    try:
-        result = extract_chapter(chapter_id, db)
-        return result
-    except Exception as e:
-        # Status is reset to "pending" inside extract_chapter on failure
-        import logging
-        logging.getLogger(__name__).error(f"Extraction failed for chapter {chapter_id}: {e}")
-    finally:
-        db.close()
-
-
 @app.post("/api/extract-chapter/{chapter_id}")
-def start_extraction(chapter_id: int, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
-    chapter = db.query(Chapter).get(chapter_id)
-    if not chapter:
-        raise HTTPException(status_code=404, detail="Chapter not found")
-    if chapter.extraction_status == "extracting":
-        raise HTTPException(status_code=409, detail="Extraction already in progress")
-
-    chapter.extraction_status = "extracting"
-    db.commit()
-
-    background_tasks.add_task(_run_extraction, chapter_id)
-    return {"status": "extracting", "chapter_id": chapter_id}
+def start_extraction(chapter_id: int, db: Session = Depends(get_db)):
+    raise HTTPException(
+        status_code=501,
+        detail="PDF extraction is disabled. Add chapterN_questions.json and chapterN_answers.json to the repo root and restart the server.",
+    )
 
 
 @app.get("/api/puzzles/unverified/{chapter_id}")
@@ -140,6 +130,62 @@ def verify_all_puzzles(chapter_id: int, db: Session = Depends(get_db)):
 
 
 # ---------------------------------------------------------------------------
+# Import answers (Phase 9: multi-move)
+# ---------------------------------------------------------------------------
+
+class ImportAnswersRequest(BaseModel):
+    answers_text: str
+
+
+@app.post("/api/chapters/{chapter_id}/import-answers")
+def import_answers(chapter_id: int, req: ImportAnswersRequest, db: Session = Depends(get_db)):
+    """Import answer text for a chapter and parse into UCI move sequences."""
+    import re
+    from extraction import parse_solution_to_uci
+
+    chapter = db.query(Chapter).get(chapter_id)
+    if not chapter:
+        raise HTTPException(status_code=404, detail="Chapter not found")
+
+    # Parse answers_text: each line starts with "N. <answer prose>"
+    answer_map = {}
+    for line in req.answers_text.strip().split("\n"):
+        line = line.strip()
+        if not line:
+            continue
+        m = re.match(r"^(\d+)\.\s*(.*)", line)
+        if m:
+            answer_map[int(m.group(1))] = m.group(2)
+
+    puzzles = (
+        db.query(Puzzle)
+        .filter(Puzzle.chapter_id == chapter_id)
+        .order_by(Puzzle.puzzle_number)
+        .all()
+    )
+
+    total = 0
+    parsed = 0
+    failed = []
+
+    for p in puzzles:
+        answer = answer_map.get(p.puzzle_number)
+        if not answer:
+            continue
+        total += 1
+        p.solution_line = answer
+        uci_line = parse_solution_to_uci(p.fen, answer)
+        if uci_line:
+            p.solution_uci_line = uci_line
+            parsed += 1
+        else:
+            failed.append(p.puzzle_number)
+
+    db.commit()
+    return {"total": total, "parsed": parsed, "failed": failed}
+
+
+# ---------------------------------------------------------------------------
 # Training endpoints
 # ---------------------------------------------------------------------------
 
@@ -165,9 +211,12 @@ def get_training_state(profile_id: int, db: Session = Depends(get_db)):
 
 @app.get("/api/training/next-puzzle/{profile_id}")
 def next_puzzle(profile_id: int, db: Session = Depends(get_db)):
+    from models import Batch
+    batch = db.query(Batch).filter(Batch.profile_id == profile_id, Batch.status == "active").first()
+    current_circle = batch.current_circle if batch else None
     puzzle = training.get_next_puzzle(profile_id=profile_id, db=db)
     if puzzle is None:
-        return {"puzzle": None}
+        return {"puzzle": None, "current_circle": current_circle}
     return {
         "puzzle": {
             "id": puzzle.id,
@@ -178,7 +227,9 @@ def next_puzzle(profile_id: int, db: Session = Depends(get_db)):
             "solution_san": puzzle.solution_san,
             "solution_uci": puzzle.solution_uci,
             "solution_line": puzzle.solution_line,
-        }
+            "solution_uci_line": puzzle.solution_uci_line or [puzzle.solution_uci],
+        },
+        "current_circle": current_circle,
     }
 
 
@@ -194,7 +245,35 @@ def record_attempt(req: AttemptRequest, db: Session = Depends(get_db)):
         user_move=req.user_move,
         db=db,
     )
-    return {"attempt_id": attempt.id, "success": bool(attempt.success)}
+
+    # Calculate XP and update profile
+    profile = db.query(Profile).get(req.profile_id)
+    streak = profile.current_streak or 0 if profile else 0
+    xp = gamification.calculate_xp(
+        time_ms=req.time_taken_ms,
+        success=req.success,
+        circle=req.circle,
+        streak=streak,
+    )
+    if profile:
+        profile.total_xp = (profile.total_xp or 0) + xp
+        # Also update session xp_earned
+        session = training._get_active_session(req.profile_id, db)
+        if session:
+            session.xp_earned = (session.xp_earned or 0) + xp
+        db.commit()
+
+    # Check for newly earned badges
+    new_badges = gamification.check_and_award_badges(profile_id=req.profile_id, db=db)
+    new_badge_keys = [b.key for b in new_badges]
+
+    return {
+        "attempt_id": attempt.id,
+        "success": bool(attempt.success),
+        "xp_earned": xp,
+        "total_xp": profile.total_xp or 0 if profile else 0,
+        "new_badges": new_badge_keys,
+    }
 
 
 @app.post("/api/training/start-session/{profile_id}")
@@ -233,9 +312,401 @@ def create_batch(req: CreateBatchRequest, db: Session = Depends(get_db)):
     }
 
 
+@app.get("/api/graduations/pending")
+def get_pending_graduations(db: Session = Depends(get_db)):
+    from models import Batch, Profile, Chapter
+    batches = (
+        db.query(Batch)
+        .filter(Batch.status == "ready_to_graduate")
+        .order_by(Batch.id)
+        .all()
+    )
+    result = []
+    for b in batches:
+        profile = db.query(Profile).get(b.profile_id)
+        chapter = db.query(Chapter).get(b.chapter_id)
+        result.append({
+            "batch_id": b.id,
+            "profile_id": b.profile_id,
+            "profile_name": profile.name if profile else None,
+            "chapter_id": b.chapter_id,
+            "chapter_title": chapter.title if chapter else None,
+            "current_circle": b.current_circle,
+            "status": b.status,
+        })
+    return result
+
+
+@app.get("/api/parent/activity")
+def get_parent_activity(db: Session = Depends(get_db)):
+    """Snapshot of all student profiles for the live parent monitor.
+    Returns recent attempts + current puzzle for each child.
+    Polled every 3 seconds by the frontend.
+    """
+    from training import get_next_puzzle
+    from datetime import timezone
+    from models import Batch, Attempt
+
+    students = db.query(Profile).filter(Profile.role == "student").order_by(Profile.id).all()
+    children = []
+
+    for student in students:
+        # Active session
+        session = (
+            db.query(TrainingSession)
+            .filter(TrainingSession.profile_id == student.id, TrainingSession.ended_at == None)
+            .order_by(TrainingSession.started_at.desc())
+            .first()
+        )
+
+        # Active batch
+        batch = (
+            db.query(Batch)
+            .filter(
+                Batch.profile_id == student.id,
+                Batch.status.in_(["active", "ready_to_graduate"]),
+            )
+            .first()
+        )
+
+        # Current puzzle (next to be solved — pure read)
+        next_puz = get_next_puzzle(student.id, db) if batch else None
+        current_puzzle = None
+        if next_puz:
+            chapter = db.query(Chapter).get(next_puz.chapter_id)
+            current_puzzle = {
+                "id": next_puz.id,
+                "puzzle_number": next_puz.puzzle_number,
+                "fen": next_puz.fen,
+                "turn": next_puz.turn,
+                "chapter_title": chapter.title if chapter else "",
+            }
+
+        # Recent attempts (last 15, newest first) joined with puzzle + chapter
+        recent_rows = (
+            db.query(Attempt, Puzzle, Chapter)
+            .join(Puzzle, Attempt.puzzle_id == Puzzle.id)
+            .join(Chapter, Puzzle.chapter_id == Chapter.id)
+            .filter(Attempt.profile_id == student.id)
+            .order_by(Attempt.attempted_at.desc())
+            .limit(15)
+            .all()
+        )
+        recent_attempts = [
+            {
+                "puzzle_number": puz.puzzle_number,
+                "chapter_title": ch.title,
+                "circle": att.circle,
+                "success": bool(att.success),
+                "time_taken_ms": att.time_taken_ms,
+                "attempted_at": att.attempted_at.isoformat(),
+            }
+            for att, puz, ch in recent_rows
+        ]
+
+        children.append({
+            "profile_id": student.id,
+            "name": student.name,
+            "total_xp": student.total_xp or 0,
+            "current_streak": student.current_streak or 0,
+            "session": {
+                "started_at": session.started_at.isoformat(),
+                "puzzles_attempted": session.puzzles_attempted or 0,
+                "puzzles_correct": session.puzzles_correct or 0,
+            } if session else None,
+            "training": {
+                "has_active_batch": bool(batch),
+                "chapter_id": batch.chapter_id if batch else None,
+                "current_circle": batch.current_circle if batch else None,
+                "status": batch.status if batch else None,
+            },
+            "current_puzzle": current_puzzle,
+            "recent_attempts": recent_attempts,
+        })
+
+    return {"children": children, "refreshed_at": datetime.utcnow().isoformat()}
+
+
 @app.post("/api/training/approve-graduation/{batch_id}")
 def approve_graduation(batch_id: int, db: Session = Depends(get_db)):
+    from models import Batch, Chapter
     batch = training.approve_graduation(batch_id=batch_id, db=db)
     if not batch:
         raise HTTPException(status_code=404, detail="Batch not found")
-    return {"batch_id": batch.id, "status": batch.status}
+    # Suggest next chapter (chapter_id + 1 if it exists)
+    next_chapter = db.query(Chapter).filter(Chapter.id == batch.chapter_id + 1).first()
+    return {
+        "batch_id": batch.id,
+        "status": batch.status,
+        "next_chapter_id": next_chapter.id if next_chapter else None,
+    }
+
+
+# ---------------------------------------------------------------------------
+# Dashboard endpoint
+# ---------------------------------------------------------------------------
+
+@app.get("/api/dashboard/{profile_id}")
+def get_dashboard(profile_id: int, db: Session = Depends(get_db)):
+    profile = db.query(Profile).get(profile_id)
+    if not profile:
+        raise HTTPException(status_code=404, detail="Profile not found")
+
+    # Training state (includes circle_stats + session_time_remaining_seconds)
+    training_state = training.get_training_state(profile_id=profile_id, db=db)
+
+    # Today's aggregated stats across all sessions today
+    today_str = datetime.utcnow().strftime("%Y-%m-%d")
+    today_sessions = (
+        db.query(TrainingSession)
+        .filter(
+            TrainingSession.profile_id == profile_id,
+            TrainingSession.started_at >= datetime.strptime(today_str, "%Y-%m-%d"),
+        )
+        .all()
+    )
+    today_attempted = sum(s.puzzles_attempted for s in today_sessions)
+    today_correct = sum(s.puzzles_correct for s in today_sessions)
+    today_duration = sum(
+        s.duration_seconds or 0
+        for s in today_sessions
+        if s.ended_at is not None
+    )
+
+    return {
+        "profile": {
+            "id": profile.id,
+            "name": profile.name,
+            "total_xp": profile.total_xp or 0,
+            "current_streak": profile.current_streak or 0,
+            "longest_streak": profile.longest_streak or 0,
+            "last_session_date": profile.last_session_date,
+        },
+        "training": training_state,
+        "today": {
+            "puzzles_attempted": today_attempted,
+            "puzzles_correct": today_correct,
+            "duration_seconds": today_duration,
+        },
+    }
+
+
+@app.get("/api/analytics/{profile_id}")
+def get_analytics(profile_id: int, db: Session = Depends(get_db)):
+    import json, statistics
+    from datetime import timedelta
+    from collections import defaultdict
+    from models import Batch, Attempt, PuzzleMastery
+
+    profile = db.query(Profile).get(profile_id)
+    if not profile:
+        raise HTTPException(status_code=404, detail="Profile not found")
+
+    # Active or ready-to-graduate batch
+    batch = db.query(Batch).filter(
+        Batch.profile_id == profile_id,
+        Batch.status.in_(["active", "ready_to_graduate"]),
+    ).first()
+
+    circle_perf = []
+    time_distribution = []
+    hard_puzzles = []
+
+    if batch:
+        puzzle_ids = (
+            json.loads(batch.puzzle_ids)
+            if isinstance(batch.puzzle_ids, str)
+            else batch.puzzle_ids
+        )
+        batch_attempts = db.query(Attempt).filter(Attempt.batch_id == batch.id).all()
+
+        # Group attempts by circle
+        by_circle = defaultdict(list)
+        all_times = []
+        for a in batch_attempts:
+            by_circle[a.circle].append(a)
+            if a.time_taken_ms:
+                all_times.append(a.time_taken_ms)
+
+        for circle in sorted(by_circle):
+            attempts = by_circle[circle]
+            times = [a.time_taken_ms for a in attempts if a.time_taken_ms]
+            correct = sum(1 for a in attempts if a.success)
+            circle_perf.append({
+                "circle": circle,
+                "avg_ms": round(sum(times) / len(times)) if times else None,
+                "median_ms": round(statistics.median(times)) if times else None,
+                "correct": correct,
+                "total": len(attempts),
+            })
+
+        # Time distribution buckets
+        buckets = [
+            ("<5s", 0, 5000),
+            ("5-10s", 5000, 10000),
+            ("10-15s", 10000, 15000),
+            ("15-20s", 15000, 20000),
+            ("20-30s", 20000, 30000),
+            ("30s+", 30000, None),
+        ]
+        for label, lo, hi in buckets:
+            count = sum(1 for t in all_times if t >= lo and (hi is None or t < hi))
+            time_distribution.append({"bucket": label, "count": count})
+
+        # Hardest puzzles by wrong attempts
+        mastery_rows = (
+            db.query(PuzzleMastery, Puzzle)
+            .join(Puzzle, PuzzleMastery.puzzle_id == Puzzle.id)
+            .filter(
+                PuzzleMastery.profile_id == profile_id,
+                PuzzleMastery.puzzle_id.in_(puzzle_ids),
+                PuzzleMastery.total_wrong > 0,
+            )
+            .order_by(PuzzleMastery.total_wrong.desc())
+            .limit(10)
+            .all()
+        )
+        hard_puzzles = [
+            {
+                "puzzle_number": p.puzzle_number,
+                "chapter_id": p.chapter_id,
+                "wrong_count": m.total_wrong,
+                "best_time_ms": m.best_time_ms,
+            }
+            for m, p in mastery_rows
+        ]
+
+    # Daily activity — last 30 days from closed sessions
+    cutoff = datetime.utcnow() - timedelta(days=30)
+    sessions = (
+        db.query(TrainingSession)
+        .filter(
+            TrainingSession.profile_id == profile_id,
+            TrainingSession.started_at >= cutoff,
+            TrainingSession.ended_at.isnot(None),
+        )
+        .all()
+    )
+    daily = defaultdict(lambda: {"attempted": 0, "correct": 0})
+    for s in sessions:
+        day = s.started_at.strftime("%Y-%m-%d")
+        daily[day]["attempted"] += s.puzzles_attempted or 0
+        daily[day]["correct"] += s.puzzles_correct or 0
+    daily_activity = [{"date": d, **v} for d, v in sorted(daily.items())]
+
+    return {
+        "profile_name": profile.name,
+        "circle_perf": circle_perf,
+        "daily_activity": daily_activity,
+        "time_distribution": time_distribution,
+        "hard_puzzles": hard_puzzles,
+    }
+
+
+# ---------------------------------------------------------------------------
+# Gamification endpoints
+# ---------------------------------------------------------------------------
+
+@app.get("/api/leaderboard")
+def get_leaderboard(db: Session = Depends(get_db)):
+    return gamification.get_leaderboard(db=db)
+
+
+@app.get("/api/badges/{profile_id}")
+def get_badges(profile_id: int, db: Session = Depends(get_db)):
+    """Return all badge definitions with earned status for a profile."""
+    all_defs = db.query(BadgeDefinition).order_by(BadgeDefinition.id).all()
+    earned_ids = {
+        eb.badge_id
+        for eb in db.query(EarnedBadge).filter(EarnedBadge.profile_id == profile_id).all()
+    }
+    return [
+        {
+            "id": b.id,
+            "key": b.key,
+            "name": b.name,
+            "description": b.description,
+            "category": b.category,
+            "icon": b.icon,
+            "earned": b.id in earned_ids,
+        }
+        for b in all_defs
+    ]
+
+
+class UpdatePuzzleFenRequest(BaseModel):
+    fen: str
+    turn: str  # "w" or "b"
+
+
+@app.get("/api/puzzles/{puzzle_id}")
+def get_puzzle_by_id(puzzle_id: int, db: Session = Depends(get_db)):
+    puzzle = db.query(Puzzle).get(puzzle_id)
+    if not puzzle:
+        raise HTTPException(status_code=404, detail="Puzzle not found")
+    return {
+        "puzzle": {
+            "id": puzzle.id,
+            "chapter_id": puzzle.chapter_id,
+            "puzzle_number": puzzle.puzzle_number,
+            "fen": puzzle.fen,
+            "turn": puzzle.turn,
+            "solution_san": puzzle.solution_san,
+            "solution_uci": puzzle.solution_uci,
+            "solution_line": puzzle.solution_line,
+            "solution_uci_line": puzzle.solution_uci_line or [puzzle.solution_uci],
+        }
+    }
+
+
+class UpdatePuzzleSolutionRequest(BaseModel):
+    solution_san: str
+    solution_uci: str
+    solution_line: str | None = None
+    solution_uci_line: list[str] | None = None
+
+
+@app.put("/api/puzzles/{puzzle_id}/solution")
+def update_puzzle_solution(puzzle_id: int, req: UpdatePuzzleSolutionRequest, db: Session = Depends(get_db)):
+    puzzle = db.query(Puzzle).get(puzzle_id)
+    if not puzzle:
+        raise HTTPException(status_code=404, detail="Puzzle not found")
+    puzzle.solution_san = req.solution_san
+    puzzle.solution_uci = req.solution_uci
+    puzzle.solution_line = req.solution_line
+    puzzle.solution_uci_line = req.solution_uci_line
+    db.commit()
+    return {
+        "id": puzzle.id,
+        "solution_san": puzzle.solution_san,
+        "solution_uci": puzzle.solution_uci,
+        "solution_line": puzzle.solution_line,
+        "solution_uci_line": puzzle.solution_uci_line,
+    }
+
+
+@app.put("/api/puzzles/{puzzle_id}/fen")
+def update_puzzle_fen(puzzle_id: int, req: UpdatePuzzleFenRequest, db: Session = Depends(get_db)):
+    puzzle = db.query(Puzzle).get(puzzle_id)
+    if not puzzle:
+        raise HTTPException(status_code=404, detail="Puzzle not found")
+    puzzle.fen = req.fen
+    puzzle.turn = req.turn
+    db.commit()
+    return {"id": puzzle.id, "fen": puzzle.fen, "turn": puzzle.turn}
+
+
+@app.get("/api/profiles")
+def list_profiles(db: Session = Depends(get_db)):
+    profiles = db.query(Profile).order_by(Profile.id).all()
+    return [
+        {
+            "id": p.id,
+            "name": p.name,
+            "role": p.role,
+            "uscf_rating": p.uscf_rating,
+            "total_xp": p.total_xp or 0,
+            "current_streak": p.current_streak or 0,
+        }
+        for p in profiles
+    ]
